@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resizable Split-Screen Layout</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .split-container {
+        display: flex;
+        height: 100%;
+      }
+
+      .resizable {
+        flex: 1;
+        overflow: auto;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        position: relative;
+        min-width: 0; /* Fix for overflow issues */
+      }
+
+      .resizer {
+        width: 10px;
+        cursor: ew-resize;
+        background-color: #eee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="split-container" id="splitContainer">
+      <div class="resizable" id="leftPanel">
+        <div class="resizer" id="resizer"></div>
+        <p>Left Panel</p>
+      </div>
+      <div class="resizable" id="rightPanel">
+        <p>Right Panel</p>
+      </div>
+    </div>
+
+    <script>
+      const splitContainer = document.getElementById("splitContainer");
+      const leftPanel = document.getElementById("leftPanel");
+      const resizer = document.getElementById("resizer");
+      let isResizing = false;
+
+      resizer.addEventListener("mousedown", (event) => {
+        isResizing = true;
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", () => {
+          isResizing = false;
+          document.removeEventListener("mousemove", handleMouseMove);
+        });
+      });
+
+      function handleMouseMove(event) {
+        if (isResizing) {
+          const containerRect = splitContainer.getBoundingClientRect();
+          const leftPanelWidth = event.clientX - containerRect.left;
+          const totalWidth = containerRect.width;
+          const leftPanelPercentage = (leftPanelWidth / totalWidth) * 100;
+
+          leftPanel.style.flex = `0 0 ${leftPanelPercentage}%`;
+        }
+      }
+    </script>
+  </body>
+</html>

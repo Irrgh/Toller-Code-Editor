@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>TOller Editor</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="" />
+    <style>
+      /* Apply styling to make the border invisible */
+      pre[contenteditable="true"] {
+        border: none;
+        outline: none; /* Remove the outline when focused */
+        padding-left: 2em;
+        height: 100%;
+        overflow-x: auto;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      
+    </style>
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+      <p class="browsehappy">
+        You are using an <strong>outdated</strong> browser. Please
+        <a href="#">upgrade your browser</a> to improve your experience.
+      </p>
+    <![endif]-->
+
+    <div id="main">
+      <div class="resizable-top" id="win3">
+        <div class="resizable-left" id="win1">
+          <h1>File Explorer</h1>
+        </div>
+        <div class="resizable-right" id="win2">
+          <h1>Code here!</h1>
+          <pre contenteditable="true" spellcheck="false" id="input"></pre>
+        </div>
+      </div>
+      <div class="resizable-bottom" id="win4"></div>
+    </div>
+
+    <link rel="stylesheet" href="resizable-style.css" />
+    <script src="resizable.js"></script>
+    <script async defer>
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("main").style.width = window.innerWidth + "px";
+        document.getElementById("main").style.height =
+          window.innerHeight + "px";
+
+        var sizes = {
+          win1: 0.15,
+          win3: 0.8,
+        };
+
+        Resizable.initialise("main", sizes, 2);
+      });
+
+      window.addEventListener("resize", () => {
+        Resizable.activeContentWindows[0].changeSize(
+          window.innerWidth,
+          window.innerHeight
+        );
+        Resizable.activeContentWindows[0].childrenResize();
+      });
+
+      var input = document.getElementById("input");
+      var container = document.getElementById("container");
+
+      //updateLineNumbers();
+
+      input.focus();
+
+      input.addEventListener("keydown", function (event) {
+        //console.log(event.key);
+
+        if (event.key === "Tab") {
+          event.preventDefault(); // Prevent the default Tab behavior
+
+          // Manually insert a tab character at the current caret position
+          var tabNode = document.createTextNode("\t");
+          var selection = window.getSelection();
+          var range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(tabNode);
+          range.setStartAfter(tabNode);
+          range.setEndAfter(tabNode);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+
+        if (event.key === "Enter") {
+        }
+
+        console.log(getPlainText(input));
+        //updateLineNumbers();
+      });
+
+      function updateLineNumbers() {
+        var lines = getPlainText(input).split("\n");
+        var lineCount = lines.length;
+
+        for (var i = 0; i < lineCount; i++) {
+          content = document.createTextNode(lines[i]);
+          linediv = document.createElement("div");
+          linediv.innerHtml = content;
+          linediv.setAttribute("class", "line");
+          input.childNodes = null;
+          input.appendChild(linediv);
+
+          linediv.setAttribute("data-line", lineCount || 1);
+        }
+
+        console.log(lineCount);
+        // Set the data-line attribute to the number of lines
+      }
+
+      /*
+      input.addEventListener("input", function () {
+        // Save the current selection
+        var selection = window.getSelection();
+        var range = selection.getRangeAt(0);
+        var start = range.startOffset;
+
+        // Set the new text content
+        input.textContent = "New text from JavaScript";
+
+        // Restore the selection
+        var newRange = document.createRange();
+        newRange.setStart(
+          editableDiv.firstChild,
+          Math.min(start, editableDiv.textContent.length)
+        );
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      });
+      */
+
+      function stripHtmlTags(html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        return doc.body.textContent || "";
+      }
+
+      function getPlainText(element) {
+        var text = "";
+        if (element == null) return text;
+        for (var i = 0; i < element.childNodes.length; i++) {
+          var node = element.childNodes[i];
+
+          if (node.nodeType === Node.TEXT_NODE) {
+            text += node.textContent;
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.nodeName === "DIV") {
+              text += "\n";
+            }
+
+            text += getPlainText(node);
+          }
+
+          // Add a line break after each node (customize as needed)
+        }
+
+        return text;
+      }
+    </script>
+  </body>
+</html>
