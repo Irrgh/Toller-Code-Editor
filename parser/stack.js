@@ -38,4 +38,11 @@ class Stack {
     clear() {
         this.items = [];
     }
+
+    toArray() {
+        return this.items;
+    }
+
 }
+
+module.exports = Stack;

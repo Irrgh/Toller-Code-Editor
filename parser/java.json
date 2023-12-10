@@ -1,0 +1,21 @@
+{ 
+"main" : {
+    "name" : "main",
+    "subScopes" : [
+        {"name" : "normal-bracket", "subScopes" : ["main"], "open" : "(", "close" : ")"},
+        {"name" : "curly-bracket", "subScopes" : ["main"], "open" : "{", "close" : "}"},
+        {"name" : "rect-bracket", "subScopes" : ["main"], "open" : "[", "close" : "]"},
+        {"name" : "inline-comment", "subScopes" : [], "open" : "//", "close" : "\n"},
+        {"name" : "multiline-comment", "subScopes" : [], "open" : "/*", "close" : "*/"},
+        {"name" : "string", "subScopes" : [], "open" : "\"", "close" : "\""}
+        ],
+    "reversed" : [
+        {"name" : "arith-ops", "values" : ["+","*","-","/","=","<",">"]},
+        {"name" : "bool-ops", "values" : ["!","&&","||"]}
+        ]}
+}
+
+
+
+
+

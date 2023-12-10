@@ -1,0 +1,24 @@
+{
+  "name": "toller-code-editor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "local.js",
+  "type":"commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Irrgh/Toller-Code-Editor.git"
+  },
+  "author": "Irgh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Irrgh/Toller-Code-Editor/issues"
+  },
+  "homepage": "https://github.com/Irrgh/Toller-Code-Editor#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
