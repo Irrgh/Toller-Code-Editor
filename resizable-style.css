@@ -23,3 +23,19 @@
 .horizontalResizer{
   cursor: ew-resize;
 }
+
+#win2{
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+pre[contenteditable="true"] {
+  border: none;
+  outline: none; /* Remove the outline when focused */
+  padding-left: 2em;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+}
