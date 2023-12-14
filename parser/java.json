@@ -10,8 +10,8 @@
         {"name" : "string", "subScopes" : [], "open" : "\"", "close" : "\""}
         ],
     "reversed" : [
-        {"name" : "arith-ops", "values" : ["+","*","-","/","=","<",">"]},
-        {"name" : "bool-ops", "values" : ["!","&&","||"]}
+        {"name" : "arith-op", "values" : ["+","*","-","/","=","<",">"]},
+        {"name" : "bool-op", "values" : ["!","&&","||"]}
         ]}
 }
 
