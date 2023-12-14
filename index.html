@@ -34,15 +34,15 @@
     <![endif]-->
 
     <div id="main">
-      <div class="resizable-top" id="win3">
-        <div class="resizable-left" id="win1">
-          <h1>File Explorer</h1>
-        </div>
-        <div class="resizable-right" id="win2">
+      <div class="resizable-left" id="win1">
+        <h1>File Explorer</h1>
+      </div>
+      <div class="resizable-right" id="win3">
+        <div class="resizable-top" id="win2">
           <pre contenteditable="true" spellcheck="false" id="input"></pre>
         </div>
+        <div class="resizable-bottom" id="win4"></div>
       </div>
-      <div class="resizable-bottom" id="win4"></div>
     </div>
 
     <link rel="stylesheet" href="resizable-style.css" />
@@ -54,8 +54,8 @@
           window.innerHeight + "px";
 
         var sizes = {
-          win1: 0.15,
-          win3: 0.8,
+          win1: 0.10,
+          win2: 0.8,
         };
 
         Resizable.initialise("main", sizes, 2);
