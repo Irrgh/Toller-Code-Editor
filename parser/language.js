@@ -1,3 +1,5 @@
+const Stack = require("./stack.js");
+
 
 
 function isSubScope (language, start, targetName) {
@@ -22,9 +24,6 @@ function isSubScope (language, start, targetName) {
 
 
 
-
-
-
 function languageContainsScope(language, scopeName) {    
     return isSubScope(language, language.main, scopeName)
 }
@@ -36,15 +35,31 @@ function isRef(value) {
 
 
 function getReserved(language, scopeStack) {
+
+    //console.log(language.main);
+
+    // THE UNDERLYING STACK IS MODIFIED!!! NOT GOOD ::: FIXED
+    //console.log(scopeStack);
+
     let scope = scopeStack.peek();
+    
+
     if (scope == language.main) {
-        return scope.reserved;
-    } else if (scope.reserved === undefined) {
-        return getReserved(scopeStack.pop());
+        //console.log("scope == main: " + JSON.stringify(scope));
+        return scope.reserved || [];
+    } else if (scope.reserved == undefined) {
+        //console.log("scope reserved undefined: " + JSON.stringify(scope) + JSON.stringify(scope.reserved));
+        scopeStack.pop();
+        return getReserved(language,scopeStack);
     } else if (scope.reserved == []) {
-        return getReserved(scopeStack.pop());
+        //console.log("scope reserved == []: " + JSON.stringify(scope));
+        scopeStack.pop();
+        return getReserved(language,scopeStack);
+    } else if (scope == null) {
+        //console.log("scope == null: " + JSON.stringify(scope));
+        return [];
     } else {
-        return scope.reserved;
+        return scope.reserved || [];
     }
 
 
@@ -78,7 +93,7 @@ function getScopeByName(name,language) {
 
 
 
-  module.exports = {isSubScope, languageContainsScope, isRef, getScopeByName};
+  module.exports = {isSubScope, languageContainsScope, isRef, getScopeByName, getReserved};
 
 
 

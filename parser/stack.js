@@ -43,6 +43,12 @@ class Stack {
         return this.items;
     }
 
+    copy() {
+        const stackCopy = new Stack();
+        this.toArray().forEach(item => stackCopy.push(item));
+        return stackCopy;
+    }
+
 }
 
 module.exports = Stack;

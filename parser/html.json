@@ -4,9 +4,9 @@
     "subScopes" : [
         {"name" : "tag", "subScopes" : [
             {"name" : "string", "subScopes" : [], "open" : "\"", "close" : "\""}
-        ], "open" : "<", "close" : ">"},
+        ], "open" : "<", "close" : ">", 
+        "reserved" : [{"name" : "assignment", "values" : ["="]}]},
         {"name" : "comment", "subScopes" : [], "open" : "<!--", "close" : "-->"}
     ]
-},
-"seperators" : [" ", "\t"]
+}
 }
