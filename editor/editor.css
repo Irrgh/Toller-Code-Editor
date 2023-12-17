@@ -15,7 +15,7 @@
     height: 12px;
     visibility: hidden;
     background-color: transparent;
-    border: solid rgba(255, 255, 255, 0.334) 1pt;
+    border: solid rgba(255, 255, 255, 0.334) 2pt;
     -webkit-box-shadow: none;
 }
   
@@ -26,7 +26,7 @@
 }   
 
 
-.editor::-webkit-scrollbar-thumb:hover , .editor-scrolling {
+.editor::-webkit-scrollbar-thumb:hover , .editor-scrolling::-webkit-scrollbar-thumb {
     background-image: linear-gradient(to bottom, hsla(22, 98%, 51%, 0.7), hsla(308, 98%, 51%, 0.7));
     box-shadow: 0 0 15px inset rgba(255,255,255,0.9);
 }

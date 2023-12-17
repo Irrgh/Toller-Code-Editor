@@ -93,8 +93,8 @@ Resizable.ContentWindow = class{
     this.getDiv().style.position = "absolute";
     this.getDiv().style.overflow = "hidden";
 
-    this.getDiv().style.width = Math.round(this.width- Resizable.resizerThickness)+"px";
-    this.getDiv().style.height = Math.round(this.height- Resizable.resizerThickness)+"px";
+    this.getDiv().style.width = Math.floor(this.width - Resizable.resizerThickness/2)+"px";
+    this.getDiv().style.height = Math.floor(this.height - Resizable.resizerThickness/2)+"px";
 
     Resizable.activeContentWindows.push(this);
     this.calculateSizeFractionOfParent();
@@ -151,17 +151,15 @@ Resizable.ContentWindow = class{
       case Resizable.Sides.TOP:
         //Based on position of resizer line
         this.changeSize(this.parent.width, parseInt(this.parent.getDiv().style.height) - mousePos);
-        this.getDiv().style.top = Math.round(mousePos) - Resizable.currentResizer.lineThickness +"px";
+        this.getDiv().style.top = Math.floor(mousePos) - Resizable.currentResizer.lineThickness +"px";
         break;
       case Resizable.Sides.BOTTOM:
         this.changeSize(this.parent.width, mousePos - this.getDiv().getBoundingClientRect().top);
         break;
       case Resizable.Sides.LEFT:   
         //Based on position of resizer line
-        console.log("i did go here");
-        console.log(Resizable.currentResizer.lineThickness);
         this.changeSize(parseInt(this.parent.getDiv().style.width) - mousePos, this.parent.height);
-        this.getDiv().style.left = Math.round(mousePos) + Resizable.currentResizer.lineThickness + "px";
+        this.getDiv().style.left = Math.floor(mousePos) + Resizable.currentResizer.lineThickness + "px";
         break;
       case Resizable.Sides.RIGHT:
         this.changeSize(mousePos - this.getDiv().getBoundingClientRect().left, this.parent.height);
@@ -269,8 +267,8 @@ Resizable.ContentWindow = class{
       }
     }
 
-    width = Math.round(width);
-    height = Math.round(height);
+    width = Math.floor(width);
+    height = Math.floor(height);
     this.getDiv().style.width = width + "px";
     this.getDiv().style.height = height + "px";
     this.width = width;
@@ -336,10 +334,10 @@ Resizable.ContentWindow = class{
 
     var w1 = new Resizable.ContentWindow(this, leftWidth, this.height, leftDiv);
     var w2 = new Resizable.ContentWindow(this, this.width - leftWidth - this.childResizerThickness/2, this.height, rightDiv);
-    w2.getDiv().style.left = Math.round(leftWidth + this.childResizerThickness/2) + "px";
+    w2.getDiv().style.left = Math.floor(leftWidth + this.childResizerThickness/2) + "px";
 
     this.childResizer = new Resizable.Resizer(this, w1, w2, true);
-    this.childResizer.getDiv().style.left = Math.round(leftWidth - this.childResizerThickness/2) + "px";
+    this.childResizer.getDiv().style.left = Math.floor(leftWidth - this.childResizerThickness/2) + "px";
 
     this.children.push(w1);
     this.children.push(w2);
@@ -361,10 +359,10 @@ Resizable.ContentWindow = class{
 
     var w1 = new Resizable.ContentWindow(this, this.width, topHeight - this.childResizerThickness/2, topDiv);
     var w2 = new Resizable.ContentWindow(this, this.width, this.height - topHeight - this.childResizerThickness/2, bottomDiv);
-    w2.getDiv().style.top = Math.round(topHeight + this.childResizerThickness/2)  + "px";
+    w2.getDiv().style.top = Math.floor(topHeight + this.childResizerThickness/2)  + "px";
 
     this.childResizer = new Resizable.Resizer(this, w1, w2, false);
-    this.childResizer.getDiv().style.top = Math.round(topHeight - this.childResizerThickness/2) + "px";
+    this.childResizer.getDiv().style.top = Math.floor(topHeight - this.childResizerThickness/2) + "px";
 
     this.children.push(w1);
     this.children.push(w2);
@@ -504,11 +502,11 @@ Resizable.Resizer = class{
 
     this.lineThickness = Resizable.resizerThickness;
     if(isHorizontal){
-      this.getDiv().style.width = Math.round(this.lineThickness) + "px";
+      this.getDiv().style.width = Math.floor(this.lineThickness) + "px";
       this.getDiv().style.height = this.parent.height + "px";
     }else{
       this.getDiv().style.width = this.parent.width + "px";
-      this.getDiv().style.height = Math.round(this.lineThickness) + "px";
+      this.getDiv().style.height = Math.floor(this.lineThickness) + "px";
     }
 
     this.reposition();
