@@ -4,21 +4,60 @@
     padding-left: 0em;
     height: 100%;
     width: 100%;
-    overflow: overlay;
+    overflow: scroll;
 }
 
 
-/* Apply semi-transparent background to the scrollbar */
+
+
+
+
+
+
 .editor::-webkit-scrollbar {
-    background-color: rgba(255, 255, 255, 0); /* Adjust alpha (fourth value) for transparency */
-    border: transparent white 1pt;
+    width: 12px;
+    visibility: hidden;
+    background-color: transparent;
+    border: solid rgba(255, 255, 255, 0.334) 1pt;
+    -webkit-box-shadow: none;
 }
   
-/* Apply styling to the scrollbar thumb (handle) */
+
+
+
+
+
 .editor::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.5); /* Adjust alpha for transparency */
-    border-radius: 6pt;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2pt;
+    -webkit-box-shadow: none;
+    
 }   
+
+
+
+
+.editor::-webkit-scrollbar-thumb:hover {
+    transition: background-image 1s ease;
+    background: linear-gradient(to bottom, rgba(253, 97, 7, 0.549), rgba(252, 12, 220, 0.39));
+}
+
+.editor::-webkit-scrollbar-thumb:horizontal:hover {
+    transition: background-image 1s ease;
+    background: linear-gradient(to right, rgba(253, 97, 7, 0.549), rgba(252, 12, 220, 0.39));
+}
+
+
+.editor::-webkit-scrollbar:horizontal{
+    height: 12px;   
+}
+
+.editor::-webkit-scrollbar-corner {
+    display: none;
+}
+
+
+  
 
 
 
