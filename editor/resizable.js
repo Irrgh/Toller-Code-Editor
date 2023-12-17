@@ -93,8 +93,8 @@ Resizable.ContentWindow = class{
     this.getDiv().style.position = "absolute";
     this.getDiv().style.overflow = "hidden";
 
-    this.getDiv().style.width = Math.round(this.width)+"px";
-    this.getDiv().style.height = Math.round(this.height)+"px";
+    this.getDiv().style.width = Math.round(this.width- Resizable.resizerThickness)+"px";
+    this.getDiv().style.height = Math.round(this.height- Resizable.resizerThickness)+"px";
 
     Resizable.activeContentWindows.push(this);
     this.calculateSizeFractionOfParent();
@@ -151,15 +151,17 @@ Resizable.ContentWindow = class{
       case Resizable.Sides.TOP:
         //Based on position of resizer line
         this.changeSize(this.parent.width, parseInt(this.parent.getDiv().style.height) - mousePos);
-        this.getDiv().style.top = Math.round(mousePos) +"px";
+        this.getDiv().style.top = Math.round(mousePos) - Resizable.currentResizer.lineThickness +"px";
         break;
       case Resizable.Sides.BOTTOM:
         this.changeSize(this.parent.width, mousePos - this.getDiv().getBoundingClientRect().top);
         break;
       case Resizable.Sides.LEFT:   
         //Based on position of resizer line
+        console.log("i did go here");
+        console.log(Resizable.currentResizer.lineThickness);
         this.changeSize(parseInt(this.parent.getDiv().style.width) - mousePos, this.parent.height);
-        this.getDiv().style.left = Math.round(mousePos) +"px";
+        this.getDiv().style.left = Math.round(mousePos) + Resizable.currentResizer.lineThickness + "px";
         break;
       case Resizable.Sides.RIGHT:
         this.changeSize(mousePos - this.getDiv().getBoundingClientRect().left, this.parent.height);
@@ -396,6 +398,7 @@ function resizerMouseDown(e) {
   Resizable.resizingStarted();
   e.stopPropagation();
   Resizable.currentResizer = getResizerFromDiv(this.id);
+  console.log(Resizable.currentResizer.cancelResize);
   window.addEventListener('mousemove', Resizable.currentResizer.resize);
   window.addEventListener('mouseup', Resizable.currentResizer.cancelResize);
 }
@@ -499,14 +502,13 @@ Resizable.Resizer = class{
 
     this.getDiv().style.position = "absolute";
 
-    //this.lineThickness = 4;
     this.lineThickness = Resizable.resizerThickness;
     if(isHorizontal){
       this.getDiv().style.width = Math.round(this.lineThickness) + "px";
       this.getDiv().style.height = this.parent.height + "px";
     }else{
       this.getDiv().style.width = this.parent.width + "px";
-      this.getDiv().style.height = this.lineThickness + "px";
+      this.getDiv().style.height = Math.round(this.lineThickness) + "px";
     }
 
     this.reposition();

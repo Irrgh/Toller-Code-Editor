@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
 <html>
   <head>
     <meta charset="utf-8" />
@@ -10,30 +6,23 @@
     <title>TOller Editor</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="" />
+    <link rel="stylesheet" href="resizable-style.css" />
+    <link rel="stylesheet" href="editor.css"/>
 
   </head>
   <body>
-    <!--[if lt IE 7]>
-      <p class="browsehappy">
-        You are using an <strong>outdated</strong> browser. Please
-        <a href="#">upgrade your browser</a> to improve your experience.
-      </p>
-    <![endif]-->
-
+  
     <div id="main">
       <div class="resizable-left" id="win1">
         <h1>File Explorer</h1>
       </div>
       <div class="resizable-right" id="win3">
         <div class="resizable-top" id="win2">
-          <pre contenteditable="true" spellcheck="false" id="input"></pre>
+          <pre contenteditable="true" spellcheck="false" id="input" class="editor"></pre>
         </div>
         <div class="resizable-bottom" id="win4"></div>
       </div>
     </div>
-
-    <link rel="stylesheet" href="resizable-style.css" />
     <script src="resizable.js"></script>
     <script async defer>
       document.addEventListener("DOMContentLoaded", () => {
@@ -58,7 +47,6 @@
       });
 
       var input = document.getElementById("input");
-      var container = document.getElementById("container");
 
       //updateLineNumbers();
 
@@ -86,49 +74,10 @@
         }
 
         console.log(getPlainText(input));
-        //updateLineNumbers();
+
       });
 
-      /*function updateLineNumbers() {
-        var lines = getPlainText(input).split("\n");
-        var lineCount = lines.length;
-
-        for (var i = 0; i < lineCount; i++) {
-          content = document.createTextNode(lines[i]);
-          linediv = document.createElement("div");
-          linediv.innerHtml = content;
-          linediv.setAttribute("class", "line");
-          input.childNodes = null;
-          input.appendChild(linediv);
-
-          linediv.setAttribute("data-line", lineCount || 1);
-        }
-
-        console.log(lineCount);
-        // Set the data-line attribute to the number of line
-      }
-      */
-
-      /*
-      input.addEventListener("input", function () {
-        // Save the current selection
-        var selection = window.getSelection();
-        var range = selection.getRangeAt(0);
-        var start = range.startOffset;
-
-        // Set the new text content
-        input.textContent = "New text from JavaScript";
-
-        // Restore the selection
-        var newRange = document.createRange();
-        newRange.setStart(
-          editableDiv.firstChild,
-          Math.min(start, editableDiv.textContent.length)
-        );
-        selection.removeAllRanges();
-        selection.addRange(newRange);
-      });
-      */
+      
 
       function stripHtmlTags(html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
