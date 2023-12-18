@@ -11,8 +11,8 @@
 
 
 .editor::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 9px;
+    height: 9px;
     visibility: hidden;
     background-color: transparent;
     border: solid rgba(255, 255, 255, 0.334) 2pt;
@@ -22,18 +22,19 @@
 
 .editor::-webkit-scrollbar-thumb {
     background-color: hsla(0, 0%, 100%, 0.1);
-    border-radius: 2pt;
+    border-radius: 4pt;
+    box-shadow: none
 }   
 
 
-.editor::-webkit-scrollbar-thumb:hover , .vertical-scrolling::-webkit-scrollbar-thumb {
+.editor::-webkit-scrollbar-thumb:vertical:hover , .vertical-scrolling::-webkit-scrollbar-thumb:vertical {
     background-image: var(--vertical-gradient);
-    box-shadow: 0 0 15px inset rgba(255,255,255,0.9);
+    box-shadow: 0 0 10px inset rgba(255,255,255,0.3);
 }
 
 .editor::-webkit-scrollbar-thumb:horizontal:hover, .horizontal-scrolling::-webkit-scrollbar-thumb:horizontal {
     background-image: var(--horizontal-gradient);
-    box-shadow: 0 0 15px inset rgba(255,255,255,0.9);
+    box-shadow: 0 0 10px inset rgba(255,255,255,0.3);
 }
 
 
@@ -41,6 +42,14 @@
 .editor::-webkit-scrollbar-corner {
     display: none;
 }
+
+
+
+
+
+
+
+
 
 
 

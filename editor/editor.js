@@ -18,7 +18,6 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 
-
         editor.addEventListener("wheel", function (event) {
             const isVerticalScroll = Math.abs(event.deltaY) > Math.abs(event.deltaX);
     
@@ -29,15 +28,25 @@ Editor.updatePage = function updateEditorWindows() {
               editor.classList.add("horizontal-scrolling");
             }
 
-            console.log("scrolling");
             const scrollTop = editor.scrollTop;
-            const maxScroll = editor.scrollHeight - window.innerHeight;
+            const maxScrollVertical = editor.scrollHeight - window.innerHeight;
+            const ratioVertical = editor.scrollHeight / window.innerHeight;
 
-            const scrollPercentage = scrollTop / maxScroll;
+            const scrollLeft = editor.scrollLeft;
+            const maxScrollHorizontal = editor.scrollWidth - window.innerWidth;
+            const ratioHorizontal = editor.scrollWidth / window.innerWidth;
+
+
+            const scrollPercentageVertical = scrollTop / maxScrollVertical;
+            const scrollPercentageHorizontal = scrollLeft / maxScrollHorizontal;
 
             // Calculate a color based on the scroll position
-            const newColor1 = `hsl(${scrollPercentage}, 50%, 70%)`;
-            const newColor2 = `hsl(${scrollPercentage + 100}, 50%, 70%)`;
+            const newColorVertical1 = `hsl(${scrollPercentageVertical * 360}, 70%, 80%)`;
+            const newColorVertical2 = `hsl(${scrollPercentageVertical * 360 + 360  / ratioVertical}, 70%, 80%)`;
+
+            const newColorHorizontal1 = `hsl(${scrollPercentageHorizontal * 360}, 70%, 80%)`;
+            const newColorHorizontal2 = `hsl(${scrollPercentageHorizontal * 360 + 360  / ratioHorizontal }, 70%, 80%)`;
+
 
 
             // Set the color of the scrollbar thumb
@@ -45,25 +54,20 @@ Editor.updatePage = function updateEditorWindows() {
             // Add the "scrolling" class to the target element
             
 
-            editor.style.setProperty('--vertical-gradient', `linear-gradient(to bottom, ${newColor1}, ${newColor2})`);
-            editor.style.setProperty('--horizontal-gradient', `linear-gradient(to right, ${newColor1}, ${newColor2})`);
-
-
-
-
-            clearTimeout(editor.scrollTimeout);
-
-            editor.scrollTimeout = setTimeout(() => {
-                editor.classList.remove('vertical-scrolling');
-                editor.classList.remove('horizontal-scrolling');
-            }, 100); // 500 milliseconds delay
+            editor.style.setProperty('--vertical-gradient', `linear-gradient(to bottom, ${newColorVertical1}, ${newColorVertical2})`);
+            editor.style.setProperty('--horizontal-gradient', `linear-gradient(to right, ${newColorHorizontal1}, ${newColorHorizontal2})`);
 
         });
 
 
         editor.addEventListener("scroll", function () {
 
+            clearTimeout(editor.scrollTimeout);
 
+            editor.scrollTimeout = setTimeout(() => {
+                editor.classList.remove('vertical-scrolling');
+                editor.classList.remove('horizontal-scrolling');
+            }, 250); // 500 milliseconds delay
             
 
         });
