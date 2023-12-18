@@ -26,13 +26,13 @@
 }   
 
 
-.editor::-webkit-scrollbar-thumb:hover , .editor-scrolling::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(to bottom, hsla(22, 98%, 51%, 0.7), hsla(308, 98%, 51%, 0.7));
+.editor::-webkit-scrollbar-thumb:hover , .vertical-scrolling::-webkit-scrollbar-thumb {
+    background-image: var(--vertical-gradient);
     box-shadow: 0 0 15px inset rgba(255,255,255,0.9);
 }
 
-.editor::-webkit-scrollbar-thumb:horizontal:hover, .editor-scrolling {
-    background-image: linear-gradient(to right, hsla(22, 98%, 51%, 0.7), hsla(308, 98%, 51%, 0.7));
+.editor::-webkit-scrollbar-thumb:horizontal:hover, .horizontal-scrolling::-webkit-scrollbar-thumb:horizontal {
+    background-image: var(--horizontal-gradient);
     box-shadow: 0 0 15px inset rgba(255,255,255,0.9);
 }
 
