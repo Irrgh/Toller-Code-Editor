@@ -11,10 +11,14 @@ Resizable.Sides = {
 };
 
 Resizable.Classes = {
-  WINDOW_TOP: "resizable-top",
-  WINDOW_BOTTOM: "resizable-bottom",
-  WINDOW_LEFT: "resizable-left",
-  WINDOW_RIGHT: "resizable-right"
+  RESIZE_WINDOW_TOP: "resizable-top",
+  RESIZE_WINDOW_BOTTOM: "resizable-bottom",
+  RESIZE_WINDOW_LEFT: "resizable-left",
+  RESIZE_WINDOW_RIGHT: "resizable-right",
+  STATIC_WINDOW_TOP: "static-top",
+  STATIC_WINDOW_BOTTOM: "static-bottom",
+  STATIC_WINDOW_LEFT: "static-left",
+  STATIC_WINDOW_RIGHT: "static-right"
 };
 
 
@@ -22,6 +26,7 @@ Resizable.initialise = function(parentId, initialSizes, resizerThickness){
   //Find left window
   Resizable.resizerThickness = resizerThickness ? resizerThickness : 4;
   Resizable.initialSizes = initialSizes;
+  
   var parent = document.getElementById(parentId);
   var parentWindow = new Resizable.ContentWindow(null, parseInt(parent.style.width, 10), parseInt(parent.style.height, 10), parent);
   Resizable.activeContentWindows.push(parentWindow);
@@ -93,8 +98,8 @@ Resizable.ContentWindow = class{
     this.getDiv().style.position = "absolute";
     this.getDiv().style.overflow = "hidden";
 
-    this.getDiv().style.width = Math.floor(this.width - Resizable.resizerThickness/2)+"px";
-    this.getDiv().style.height = Math.floor(this.height - Resizable.resizerThickness/2)+"px";
+    this.getDiv().style.width = Math.floor(this.width)+"px";
+    this.getDiv().style.height = Math.floor(this.height)+"px";
 
     Resizable.activeContentWindows.push(this);
     this.calculateSizeFractionOfParent();
@@ -113,23 +118,23 @@ Resizable.ContentWindow = class{
     //Cannot have more than two direct children
     var child1, child2, isHorizontal = false;
     //Find left child
-    if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_LEFT}`).length > 0){
-      child1 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_LEFT}`)[0];
-      if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_LEFT}`).length > 0){
-        child2 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_RIGHT}`)[0];
+    if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_LEFT}`).length > 0){
+      child1 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_LEFT}`)[0];
+      if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_LEFT}`).length > 0){
+        child2 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_RIGHT}`)[0];
       }else{
         console.error(`${this.divId} has left child but not right`);
       }
       isHorizontal = true;
     }
-    if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_TOP}`).length > 0){
+    if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_TOP}`).length > 0){
       if(child1 != undefined){
         console.error(`${this.divId} has both left and top children`);
         return;
       }else{
-        child1 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_TOP}`)[0];
-        if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_BOTTOM}`).length > 0){
-          child2 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.WINDOW_BOTTOM}`)[0];
+        child1 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_TOP}`)[0];
+        if(document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_BOTTOM}`).length > 0){
+          child2 = document.querySelectorAll(`#${this.divId} > .${Resizable.Classes.RESIZE_WINDOW_BOTTOM}`)[0];
         }else{
           console.error(`${this.divId} has top child but not bottom`);
         }
@@ -151,7 +156,7 @@ Resizable.ContentWindow = class{
       case Resizable.Sides.TOP:
         //Based on position of resizer line
         this.changeSize(this.parent.width, parseInt(this.parent.getDiv().style.height) - mousePos);
-        this.getDiv().style.top = Math.floor(mousePos) - Resizable.currentResizer.lineThickness +"px";
+        this.getDiv().style.top = mousePos + Resizable.currentResizer.lineThickness +"px";
         break;
       case Resizable.Sides.BOTTOM:
         this.changeSize(this.parent.width, mousePos - this.getDiv().getBoundingClientRect().top);
@@ -159,7 +164,7 @@ Resizable.ContentWindow = class{
       case Resizable.Sides.LEFT:   
         //Based on position of resizer line
         this.changeSize(parseInt(this.parent.getDiv().style.width) - mousePos, this.parent.height);
-        this.getDiv().style.left = Math.floor(mousePos) + Resizable.currentResizer.lineThickness + "px";
+        this.getDiv().style.left = mousePos + Resizable.currentResizer.lineThickness + "px";
         break;
       case Resizable.Sides.RIGHT:
         this.changeSize(mousePos - this.getDiv().getBoundingClientRect().left, this.parent.height);
@@ -306,8 +311,8 @@ Resizable.ContentWindow = class{
 
     }
 
-    this.minWidth = Math.round(this.minWidth);
-    this.minHeight = Math.round(this.minHeight);
+    this.minWidth = Math.floor(this.minWidth);
+    this.minHeight = Math.floor(this.minHeight);
 
   }
 
@@ -357,9 +362,10 @@ Resizable.ContentWindow = class{
     if(bottomDiv != null)
       this.getDiv().appendChild(bottomDiv);
 
-    var w1 = new Resizable.ContentWindow(this, this.width, topHeight - this.childResizerThickness/2, topDiv);
-    var w2 = new Resizable.ContentWindow(this, this.width, this.height - topHeight - this.childResizerThickness/2, bottomDiv);
+    var w1 = new Resizable.ContentWindow(this, this.width, topHeight + this.childResizerThickness/2, topDiv);
+    var w2 = new Resizable.ContentWindow(this, this.width, this.height - topHeight + this.childResizerThickness/2, bottomDiv);
     w2.getDiv().style.top = Math.floor(topHeight + this.childResizerThickness/2)  + "px";
+
 
     this.childResizer = new Resizable.Resizer(this, w1, w2, false);
     this.childResizer.getDiv().style.top = Math.floor(topHeight - this.childResizerThickness/2) + "px";

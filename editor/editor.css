@@ -5,9 +5,36 @@
     height: 100%;
     width: 100%;
     overflow: auto;
+    background-color: rgb(36, 36, 36);
+    color: whitesmoke;
 }
 
 
+.editor div::selection {
+    background-color: rgba(132, 132, 179, 0.54);
+    transition: background-color 1s ease;
+}
+
+
+
+.editor div {
+    counter-increment: linenumber;
+}
+
+.editor div::before {
+    
+    content: counter(linenumber); /* Display the line number */
+    display: inline-block; /* Ensure it behaves like a block element */
+    width: 2em; /* Adjust width as needed for alignment */
+    text-align: right; /* Align the line number to the right */
+    margin-right: 0.5em; /* Add some spacing between the line number and code */
+    color: #555; /* Line number color */
+
+}
+
+.editor div::before:hover {
+    color: #777;
+}
 
 
 .editor::-webkit-scrollbar {
@@ -23,7 +50,6 @@
 .editor::-webkit-scrollbar-thumb {
     background-color: hsla(0, 0%, 100%, 0.1);
     border-radius: 4pt;
-    box-shadow: none
 }   
 
 
