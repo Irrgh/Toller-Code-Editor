@@ -12,10 +12,33 @@ const Editor = {}
 
 Editor.updatePage = function updateEditorWindows() {
 
+    
     const editor = document.querySelector(".editor");
-    editor.childNodes[0].focus();
 
-    addScrollBehavior(editor);
+    editor.focus();
+    sel = window.getSelection();
+    range = document.createRange();
+
+    const tempchild = document.createTextNode(" ")
+    editor.firstChild.appendChild(tempchild);
+
+    range.setStart(editor.firstChild, 0);
+    range.setEnd(editor.firstChild, 0);
+
+    console.log(range);
+
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+
+
+    
+
+
+
+    
+
+    //addScrollBehavior(editor);
     addInputBehavior(editor);
 
 
@@ -117,6 +140,7 @@ function getSelectionIndecies(element) {
     const end = document.createRange();
     const content = document.createRange();
     start.selectNodeContents(element);
+    console.log(start);
     start.setEnd(range.startContainer, range.startOffset);
     end.selectNodeContents(element);
     end.setEnd(range.endContainer, range.endOffset);

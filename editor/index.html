@@ -32,7 +32,7 @@
     </div>
     <script src="editor.js"></script>
     <script src="resizable.js"></script>
-    <script async defer>
+    <script>
       document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("main").style.width = window.innerWidth + "px";
         document.getElementById("main").style.height =
@@ -45,6 +45,11 @@
         };
 
         Resizable.initialise("main", sizes, 2);
+
+        var input = document.getElementById("input");
+
+        
+        Editor.updatePage();
       });
 
       window.addEventListener("resize", () => {
@@ -54,11 +59,6 @@
         );
         Resizable.activeContentWindows[0].childrenResize();
       });
-
-      var input = document.getElementById("input");
-
-      
-      Editor.updatePage();
 
       input.addEventListener("keydown", function (event) {
         //console.log(event.key);

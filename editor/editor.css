@@ -1,7 +1,7 @@
 .editor {
     border: none;
     outline: none; /* Remove the outline when focused */
-    padding-left: 0em;
+    padding-left: 0;
     height: 100%;
     width: 100%;
     overflow: auto;
@@ -20,6 +20,9 @@
 .editor div {
     counter-increment: linenumber;
 }
+
+
+
 
 .editor div::before {
     
