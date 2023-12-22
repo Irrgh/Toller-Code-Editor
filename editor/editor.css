@@ -10,21 +10,31 @@
 }
 
 
-.editor div::selection {
+
+
+
+
+
+.editor *::selection {
     background-color: rgba(132, 132, 179, 0.54);
-    transition: background-color 1s ease;
 }
 
 
 
-.editor div {
+.editor div.line {
     counter-increment: linenumber;
 }
 
 
+.editor div.line:hover::before {
+    color : rgb(255, 74, 74);
+    
+}
 
 
-.editor div::before {
+
+
+.editor div.line::before {
     
     content: counter(linenumber); /* Display the line number */
     display: inline-block; /* Ensure it behaves like a block element */
@@ -33,10 +43,6 @@
     margin-right: 0.5em; /* Add some spacing between the line number and code */
     color: #555; /* Line number color */
 
-}
-
-.editor div::before:hover {
-    color: #777;
 }
 
 

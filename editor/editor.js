@@ -10,25 +10,17 @@ const Editor = {}
 
 
 
+
+
+
+
 Editor.updatePage = function updateEditorWindows() {
 
     
+
     const editor = document.querySelector(".editor");
 
-    editor.focus();
-    sel = window.getSelection();
-    range = document.createRange();
-
-    const tempchild = document.createTextNode(" ")
-    editor.firstChild.appendChild(tempchild);
-
-    range.setStart(editor.firstChild, 0);
-    range.setEnd(editor.firstChild, 0);
-
-    console.log(range);
-
-    sel.removeAllRanges();
-    sel.addRange(range);
+    fixForEmptyDocument(editor);
 
 
 
@@ -38,7 +30,7 @@ Editor.updatePage = function updateEditorWindows() {
 
     
 
-    //addScrollBehavior(editor);
+    addScrollBehavior(editor);
     addInputBehavior(editor);
 
 
@@ -49,7 +41,30 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 
+function fixForEmptyDocument(editor) {
+    editor.focus();
+    sel = window.getSelection();
+    range = document.createRange();
 
+    const tempchild = document.createTextNode(" ");
+    const firstLine = document.createElement("div");
+    firstLine.classList.add("line");
+
+    if (editor.firstChild) {
+        editor.removeChild(editor.firstChild);
+    }
+
+    editor.appendChild(firstLine);
+
+    editor.firstChild.appendChild(tempchild);
+
+    range.setStart(editor.firstChild, 0);
+    range.setEnd(editor.firstChild, 0);
+
+
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
 
 
 
@@ -105,12 +120,41 @@ function getTextContent (editor) {
 }
 
 
-function stringToLines (lineContainer, string) {
+function stringToLines (editor, string) {
     
-    
+    const splits = string.split("\n");
+
+    console.log(splits);
+
+    editor.childNodes.forEach(element => {
+        editor.removeChild(element);
+    });
+
+    console.log(editor.childNodes);
+
+
+    for (var i = 0; i < splits.length; i++) {
+
+        console.log("after");
+
+        const lineDiv = document.createElement("div");
+
+        // TODO: insert syntax highlighter somewhere here
+        const lineContent = document.createTextNode(i);
+
+        lineDiv.classList.add("line");
+        lineDiv.append(lineContent);
+
+        
+
+        
+
+
+        editor.append(lineDiv);
 
 
 
+    }
 
 }
 
@@ -140,8 +184,8 @@ function getSelectionIndecies(element) {
     const end = document.createRange();
     const content = document.createRange();
     start.selectNodeContents(element);
-    console.log(start);
     start.setEnd(range.startContainer, range.startOffset);
+
     end.selectNodeContents(element);
     end.setEnd(range.endContainer, range.endOffset);
 
@@ -199,8 +243,21 @@ function addInputBehavior(editor) {
             selection.removeAllRanges();
             selection.addRange(range);
         }
+
+        const string = getTextContent(editor)
+
+        stringToLines(editor, string);
+
+        console.log(editor.childNodes);
     });
 
+
+
+    editor.addEventListener("cut", function (event) {
+
+
+
+    })
 
 
 
