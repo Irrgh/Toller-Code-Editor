@@ -1,5 +1,9 @@
 const Editor = {}
 
+Editor.users = []
+
+
+
 
 
 
@@ -16,7 +20,7 @@ const Editor = {}
 
 Editor.updatePage = function updateEditorWindows() {
 
-    
+
 
     const editor = document.querySelector(".editor");
 
@@ -24,11 +28,11 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 
-    
 
 
 
-    
+
+
 
     addScrollBehavior(editor);
     addInputBehavior(editor);
@@ -46,7 +50,7 @@ function fixForEmptyDocument(editor) {
     sel = window.getSelection();
     range = document.createRange();
 
-    const tempchild = document.createTextNode(" ");
+    const tempchild = document.createElement("br");
     const firstLine = document.createElement("div");
     firstLine.classList.add("line");
 
@@ -78,7 +82,7 @@ function getTextContentFromRange(range) {
         if (node.nodeType === Node.TEXT_NODE) {
             textContent.push(node.nodeValue);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-    
+
             for (const childNode of node.childNodes) {
                 extractText(childNode);
             }
@@ -96,18 +100,20 @@ function getTextContentFromRange(range) {
     return textContent.join("");
 }
 
-function getTextContent (editor) {
+
+
+function getTextContent(editor) {
 
     const textContent = [];
     function extractText(node) {
         if (node.nodeType === Node.TEXT_NODE) {
             textContent.push(node.nodeValue);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-    
+
             for (const childNode of node.childNodes) {
                 extractText(childNode);
             }
-            if (node.tagName.toLowerCase() === "div") {
+            if (node.tagName.toLowerCase() === "div" && node.classList.contains("line")) {
                 textContent.push("\n")
             }
         }
@@ -119,41 +125,41 @@ function getTextContent (editor) {
     return textContent.join("");
 }
 
+// works but is obviously very slow for larger documents
+function stringToLines(editor, string) {
 
-function stringToLines (editor, string) {
-    
     const splits = string.split("\n");
 
     console.log(splits);
 
-    editor.childNodes.forEach(element => {
-        editor.removeChild(element);
-    });
 
-    console.log(editor.childNodes);
+    editor.innerHTML = "";
+
 
 
     for (var i = 0; i < splits.length; i++) {
 
-        console.log("after");
 
-        const lineDiv = document.createElement("div");
+
+
 
         // TODO: insert syntax highlighter somewhere here
-        const lineContent = document.createTextNode(i);
 
-        lineDiv.classList.add("line");
-        lineDiv.append(lineContent);
+        if (splits[i] !== "") {
+            const lineDiv = document.createElement("div");
+
+            const lineContent = document.createTextNode(splits[i]);
+            const carriageReturn = document.createElement("br");
+
+            lineDiv.classList.add("line");
+            lineDiv.append(lineContent);
+            lineDiv.append(carriageReturn);
+
+            editor.append(lineDiv);
+        }
+
 
         
-
-        
-
-
-        editor.append(lineDiv);
-
-
-
     }
 
 }
