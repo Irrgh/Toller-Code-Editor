@@ -126,15 +126,13 @@ function getTextContent(editor) {
 }
 
 // works but is obviously very slow for larger documents
-function stringToLines(editor, string) {
+function stringToLineFragment(string) {
+
+
+    const fragment = document.createDocumentFragment();
+
 
     const splits = string.split("\n");
-
-    console.log(splits);
-
-
-    editor.innerHTML = "";
-
 
 
     for (var i = 0; i < splits.length; i++) {
@@ -145,23 +143,23 @@ function stringToLines(editor, string) {
 
         // TODO: insert syntax highlighter somewhere here
 
-        if (splits[i] !== "") {
-            const lineDiv = document.createElement("div");
 
-            const lineContent = document.createTextNode(splits[i]);
-            const carriageReturn = document.createElement("br");
+        const lineDiv = document.createElement("div");
 
-            lineDiv.classList.add("line");
-            lineDiv.append(lineContent);
-            lineDiv.append(carriageReturn);
+        const lineContent = document.createTextNode(splits[i]);
+        const carriageReturn = document.createElement("br");
 
-            editor.append(lineDiv);
-        }
+        lineDiv.classList.add("line");
+        lineDiv.append(lineContent);
+        lineDiv.append(carriageReturn);
+
+        fragment.append(lineDiv);
 
 
-        
+
+
     }
-
+    return fragment;
 }
 
 
@@ -235,26 +233,47 @@ function addInputBehavior(editor) {
         if (clipboardData) {        // clipboard defined??
 
             // Get the plain text content
-            const plainText = clipboardData.getData('text/plain');
+            var plainText = clipboardData.getData('text/plain');
 
-            const plainTextNode = document.createTextNode(plainText);
+            const firstNewLinePos = plainText.indexOf("\n");            
 
-            insertAtCaret(plainTextNode);
+            if (firstNewLinePos === -1) {                               // everything will be pasted into the current line
+
+                insertOnSameLine(document.createTextNode(plainText));
+                
+            } else {
+
+                const sameLine = plainText.slice(0,firstNewLinePos);    // stuff added on the same line
+                const line = insertOnSameLine(document.createTextNode(sameLine));   // returns dom element "line" i hope
+
+                plainText = plainText.slice(firstNewLinePos+1);       // already added chars get cut off
+
+                const fragment = stringToLineFragment(plainText);
+
+                insertAfterLine(line,fragment);
+
+
+            }
+
+
+
+
+           
 
             const selection = window.getSelection();
             const range = document.createRange();
-            range.setStartAfter(plainTextNode);
-            range.setEndAfter(plainTextNode);
+            //range.setStartAfter(fragment);
+            //range.setEndAfter(fragment);
             range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
+
+
+            //selection.removeAllRanges();
+            //selection.addRange(range);
         }
 
-        const string = getTextContent(editor)
 
-        stringToLines(editor, string);
 
-        console.log(editor.childNodes);
+
     });
 
 
@@ -272,18 +291,34 @@ function addInputBehavior(editor) {
 }
 
 
-function insertAtCaret(node) {
+function insertOnSameLine(node) {
     const selection = window.getSelection();
     const range = selection.getRangeAt(0);
+
+
 
     // If the range is collapsed, insert the node at the selection
     if (range.collapsed) {
         range.insertNode(node);
+        return range.commonAncestorContainer; 
     } else {
         // If the range is not collapsed, delete the selected content and insert the node
         range.deleteContents();
         range.insertNode(node);
+        return node;
     }
+           // if im not retarted that should be the <div class="line"> where i just add content
+}
+
+function insertAfterLine(line,fragment) {
+
+    const range = document.createRange();
+
+    range.setStartAfter(line);
+    range.setEndAfter(line)
+
+    range.insertNode(fragment);
+
 }
 
 

@@ -20,7 +20,7 @@ function lex(language, string) {
 
     const scopeStack = new Stack();
 
-    console.log(string);
+    //console.log(string);
     const inputChars = string.split("");
 
     const output = new Array();
@@ -212,8 +212,17 @@ function lex(language, string) {
 
 
 //console.log("html.json");
-eee = lex(JSON.parse(read("parser/html.json")),`<html> <body> <!-- This is a comment --> <img src="./"> </body> </html>`)
-console.log(eee);
+
+let startTime = performance.now();
+
+eee = lex(JSON.parse(read("parser/html.json")),read("editor/index.html"))
+
+let endTime = performance.now();
+
+
+//console.log(eee);
+
+console.log(`time needed: ${endTime-startTime} ms`);
 
 
 
