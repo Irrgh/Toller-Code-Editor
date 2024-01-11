@@ -3,7 +3,8 @@ const path = require("path");
 const express = require("express");
 const portnumber = 6008;
 const server = express();
-server.use(express.static(path.join(__dirname, ".")));
+console.log(path.resolve("./editor"));
+server.use(express.static(path.resolve("./editor"), {index : "index.html"}));
 server.use(express.urlencoded({ extended: false, limit: '1mb' }));
 server.use(express.json());
 server.listen(portnumber, function () {
@@ -12,6 +13,7 @@ server.listen(portnumber, function () {
 
 /*** The websocket ***/
 const websocket_package = require("ws");
+const { fileURLToPath } = require("url");
 const websocket_portnumber = 6009;
 const serverSocket = new websocket_package.Server({ port: websocket_portnumber });
 let numberOfClients = 0;

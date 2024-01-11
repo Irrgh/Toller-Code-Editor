@@ -7,6 +7,7 @@
     overflow: auto;
     background-color: rgb(36, 36, 36);
     color: whitesmoke;
+    tab-size: 4;
 }
 
 
@@ -22,6 +23,8 @@
 
 
 .editor div.line {
+    position: relative;
+    margin: 0;
     counter-increment: linenumber;
 }
 
@@ -46,17 +49,16 @@
 }
 
 
-.editor::-webkit-scrollbar {
+* ::-webkit-scrollbar {
     width: 12px;
     height: 12px;
     visibility: hidden;
     background-color: transparent;
     border: solid rgba(255, 255, 255, 0.334) 2pt;
-    -webkit-box-shadow: none;
 }
   
 
-.editor::-webkit-scrollbar-thumb {
+* ::-webkit-scrollbar-thumb {
     background-color: hsla(0, 0%, 100%, 0.1);
     border-radius: 4pt;
 }   
@@ -80,10 +82,51 @@
 
 
 
+#select-dir {
+    border-radius: 5px;
+    background-color: goldenrod;
+    font-size: 2000;
+}
+
+
+#select-file {
+    border-radius: 5px;
+    background-color: goldenrod;
+    font-size: 2000;
+}
+
+
+#filemanager {
+    width: 100%;
+    height: 100%;
+    user-select: none;
+}
 
 
 
 
+#files {
+    overflow-x: auto;
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+}
+
+
+#files div:not(.dir):hover{
+    background-color: gray;
+}
+
+
+.dir {
+    border-left: 1pt rgb(177, 177, 177) solid;
+}
+
+
+.dir::before {
+    display: inline;
+    content: '\1F4C1'; /* Unicode character for a folder */
+}
 
 
 

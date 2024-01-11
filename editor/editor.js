@@ -16,8 +16,6 @@ Editor.users = []
 
 
 
-
-
 Editor.updatePage = function updateEditorWindows() {
 
 
@@ -41,6 +39,20 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 }
+
+
+Editor.loadContent = function (content) {
+
+    const editor = document.querySelector(".editor");
+
+    editor.innerHTML = ""
+    
+    editor.appendChild(stringToLineFragment(content));
+    
+    
+
+}
+
 
 
 
@@ -221,6 +233,13 @@ function addInputBehavior(editor) {
 
         console.log(getSelectionIndecies(editor));
 
+        let start = performance.now();
+        getTextContent(editor);
+        let end = performance.now();
+
+        console.log(`time needed: ${end-start} ms`);
+
+
     });
 
 
@@ -260,11 +279,11 @@ function addInputBehavior(editor) {
 
            
 
-            const selection = window.getSelection();
-            const range = document.createRange();
+            //const selection = window.getSelection();
+            //const range = document.createRange();
             //range.setStartAfter(fragment);
             //range.setEndAfter(fragment);
-            range.collapse(true);
+            //range.collapse(true);
 
 
             //selection.removeAllRanges();
@@ -393,4 +412,4 @@ function removeAllEventListeners(element) {
     element.replaceWith(clone);
 }
 
-
+window.editor = Editor;
