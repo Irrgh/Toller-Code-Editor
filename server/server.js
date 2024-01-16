@@ -11,6 +11,33 @@ server.listen(portnumber, function () {
     console.log(`listening at port ${portnumber}`)
 });
 
+
+
+server.post("/publish", (req,res) => {
+
+
+
+
+
+
+
+    res.send("eee");
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*** The websocket ***/
 const websocket_package = require("ws");
 const { fileURLToPath } = require("url");

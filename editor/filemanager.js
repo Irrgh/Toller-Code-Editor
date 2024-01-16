@@ -2,30 +2,35 @@
 
 const FileManager = {}
 
-FileManager.window = document.querySelector("#filemanager")
+FileManager.window = document.querySelector(".filemanager")
 
 FileManager.init = function () {
 
-    const selectDir = document.createElement("button");
+    const iconDiv = document.createElement("div");
+    iconDiv.classList.add("menu-bar")
+
+
+    const selectDir = document.createElement("span");
     selectDir.id = "select-dir";
+    selectDir.classList.add("menu-icon");
+    selectDir.classList.add("material-symbols-outlined")
     selectDir.onclick = handleDirectorySelect;
-    selectDir.style.width = "50%";
-    selectDir.style.height = "20px";
-    selectDir.append(document.createTextNode("Select Directory"));
-
-    const selectFile = document.createElement("button");
-    selectFile.id = "select-file";
-    selectFile.onclick = handleFileSelect;
-    selectFile.style.width = "50%";
-    selectFile.style.height = "20px";
-    selectFile.append(document.createTextNode("Select File"));
-
-
-
+    selectDir.append(document.createTextNode("folder_open"));
+    
+    const shareDir = document.createElement("span");
+    selectDir.id = "upload-dir";
+    shareDir.classList.add("menu-icon");
+    shareDir.classList.add("material-symbols-outlined")
+    shareDir.onclick = console.log("upload tried");
+    shareDir.append(document.createTextNode("drive_folder_upload"));
+    
+    iconDiv.appendChild(selectDir);
+    iconDiv.appendChild(shareDir);
 
 
-    this.window.append(selectDir);
-    this.window.append(selectFile);
+
+
+    this.window.append(iconDiv);
 
     const files = document.createElement("pre");
     files.id = "files";

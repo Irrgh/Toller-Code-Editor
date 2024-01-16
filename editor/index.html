@@ -8,12 +8,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="resizable-style.css" />
     <link rel="stylesheet" href="editor.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="icon" type="image/png" href="../lotuscolor.png" />
   </head>
   <body>
     <div id="main">
       <div class="resizable-left" id="win1">
-        <div id="filemanager">
+        <div class="filemanager">
+          <div class="menu-bar"></div>
+          <div class="files"></div>
+
         </div>
       </div>
       <div class="resizable-right" id="win3">
@@ -42,7 +46,7 @@
           window.innerHeight + "px";
 
         var sizes = {
-          win1: 0.2,
+          win1: 0.175,
           win2: 0.8,
           win5: 0.05,
         };

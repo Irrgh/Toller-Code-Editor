@@ -207,6 +207,7 @@ function lex(language, string) {
     return output
 }
 
+module.exports = {read, write, lex}
 
 
 
