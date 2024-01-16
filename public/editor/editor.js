@@ -1,4 +1,9 @@
+import { readFile,writeFile } from "../util/userFile.js";
+
 const Editor = {}
+
+export {Editor};
+
 
 Editor.users = []
 
@@ -20,11 +25,9 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 
-    const editor = document.querySelector(".editor");
+    Editor.window = document.querySelector(".editor");
 
-    fixForEmptyDocument(editor);
-
-
+    fixForEmptyDocument(this.window);
 
 
 
@@ -32,8 +35,10 @@ Editor.updatePage = function updateEditorWindows() {
 
 
 
-    addScrollBehavior(editor);
-    addInputBehavior(editor);
+
+
+    addScrollBehavior(this.window);
+    addInputBehavior(this.window);
 
 
 
@@ -41,17 +46,66 @@ Editor.updatePage = function updateEditorWindows() {
 }
 
 
-Editor.loadContent = function (content) {
+Editor.loadContent = async function (fileHandle) {
 
-    const editor = document.querySelector(".editor");
+    const file = await fileHandle.getFile()
 
-    editor.innerHTML = ""
-    
-    editor.appendChild(stringToLineFragment(content));
-    
-    
+    const fileType = file.type;
+
+    console.log(fileType);
+
+    if (fileType.startsWith("image/")) {
+
+        const image = await readFile(fileHandle);
+
+        this.window.innerHTML = "";
+
+        const imageElement = new Image();
+        imageElement.src = URL.createObjectURL(file);
+        imageElement.classList.add("image");
+
+        const imageContainer = document.createElement("div");
+        imageContainer.classList.add("image-container");
+        
+        imageContainer.append(imageElement);
+
+        this.window.append(imageContainer);
+
+
+
+
+
+
+    } else if (fileType.startsWith("text/")) {
+
+        const text = await readFile(fileHandle);
+
+        const newContent = stringToLineFragment(text);
+
+        this.window.innerHTML = "";
+
+        this.window.append(newContent);
+
+    } else {
+        console.log(`unknown file type: ${fileType}`);
+    }
+
+
+
+    console.log(await readFile(fileHandle));
+
+    console.log(await fileHandle.getFile())
+
+    console.log(fileHandle);
+
+
+
+
+
 
 }
+
+
 
 
 
@@ -59,8 +113,8 @@ Editor.loadContent = function (content) {
 
 function fixForEmptyDocument(editor) {
     editor.focus();
-    sel = window.getSelection();
-    range = document.createRange();
+    const sel = window.getSelection();
+    const range = document.createRange();
 
     const tempchild = document.createElement("br");
     const firstLine = document.createElement("div");
@@ -238,6 +292,28 @@ function addInputBehavior(editor) {
         let end = performance.now();
 
         console.log(`time needed: ${end-start} ms`);
+
+
+        if (event.key === "Tab") {
+            event.preventDefault(); // Prevent the default Tab behavior
+  
+            // Manually insert a tab character at the current caret position
+            var tabNode = document.createTextNode("\t");
+            var selection = window.getSelection();
+            var range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(tabNode);
+            range.setStartAfter(tabNode);
+            range.setEndAfter(tabNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+  
+          if (event.key === "Enter") {
+          }
+
+
+
 
 
     });

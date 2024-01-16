@@ -1,4 +1,5 @@
-
+import { readFile,writeFile } from "../util/userFile.js";
+import { Editor } from "./editor.js";
 
 const FileManager = {}
 
@@ -6,37 +7,11 @@ FileManager.window = document.querySelector(".filemanager")
 
 FileManager.init = function () {
 
-    const iconDiv = document.createElement("div");
-    iconDiv.classList.add("menu-bar")
+    const openFolder = this.window.querySelector("#openFolder");
+    const shareFolder = this.window.querySelector("#shareFolder");
 
-
-    const selectDir = document.createElement("span");
-    selectDir.id = "select-dir";
-    selectDir.classList.add("menu-icon");
-    selectDir.classList.add("material-symbols-outlined")
-    selectDir.onclick = handleDirectorySelect;
-    selectDir.append(document.createTextNode("folder_open"));
-    
-    const shareDir = document.createElement("span");
-    selectDir.id = "upload-dir";
-    shareDir.classList.add("menu-icon");
-    shareDir.classList.add("material-symbols-outlined")
-    shareDir.onclick = console.log("upload tried");
-    shareDir.append(document.createTextNode("drive_folder_upload"));
-    
-    iconDiv.appendChild(selectDir);
-    iconDiv.appendChild(shareDir);
-
-
-
-
-    this.window.append(iconDiv);
-
-    const files = document.createElement("pre");
-    files.id = "files";
-
-    this.window.append(files);
-
+    openFolder.addEventListener("click", handleDirectorySelect);
+    shareFolder.addEventListener("click", function () {console.log("share clicked @see filemanager.init()")});
 
     FileManager.openFilesAndDirs = [];
 
@@ -47,7 +22,7 @@ FileManager.init = function () {
 
 FileManager.redraw = async function () {
 
-    let files = document.querySelector("#files");
+    let files = document.querySelector(".files");
 
     let newFrag = document.createDocumentFragment();
 
@@ -93,7 +68,7 @@ FileManager.drawDir = async function processDirectory(directoryHandle, depth) {
     div.append(name);
     div.classList.add("dir");
     div.style.margin = "0";
-    div.style.marginLeft = `${depth*10}px`
+    div.style.marginLeft = `0.5em`
     div.setAttribute("opened","false");
 
 
@@ -161,9 +136,10 @@ FileManager.drawFile = function (fileHandle,depth) {
     const name = document.createTextNode(fileHandle.name);
     const div = document.createElement("div");
 
+    div.classList.add("file");
     div.append(name);
     div.style.margin = "0";
-    div.style.marginLeft = `${depth*10}px`;   
+    div.style.marginLeft = `0.5em`;   
 
     div.addEventListener("click", function (event) {
         event.preventDefault();
@@ -175,11 +151,7 @@ FileManager.drawFile = function (fileHandle,depth) {
         event.stopPropagation();
         event.preventDefault();
 
-        const content =  await readFile(fileHandle);
-        console.log(content);
-
-
-        window.editor.loadContent(content);
+        Editor.loadContent(fileHandle);
     })
 
 
@@ -293,22 +265,8 @@ async function handleDirectorySelect() {
     }
 }
 
-async function readFile(fileHandle) {
-    const file = await fileHandle.getFile();
-    const fileContent = await file.text();
-    return fileContent;
-}
 
-async function writeFile(fileHandle, content) {
-    const writable = await fileHandle.createWritable();
-    await writable.write(content);
-    await writable.close();
-}
-
-// Trigger the directory selection process
-//handleDirectorySelect();
-
-
+export {FileManager};
 
 
 

@@ -3,13 +3,15 @@ const path = require("path");
 const express = require("express");
 const portnumber = 6008;
 const server = express();
-console.log(path.resolve("./editor"));
-server.use(express.static(path.resolve("./editor"), {index : "index.html"}));
+console.log(path.resolve("./public"));
+server.use(express.static(path.resolve("./public"), {index : "editor/index.html"}));
 server.use(express.urlencoded({ extended: false, limit: '1mb' }));
 server.use(express.json());
 server.listen(portnumber, function () {
     console.log(`listening at port ${portnumber}`)
 });
+
+
 
 
 
