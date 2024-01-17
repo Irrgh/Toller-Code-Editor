@@ -6,9 +6,16 @@
     <title>Toller Editor</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="./editor/resizable-style.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="./editor/resizable-style.css"
+    />
     <link rel="stylesheet" type="text/css" href="./editor/editor.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
     <link rel="icon" type="image/png" href="../lotuscolor.png" />
   </head>
   <body>
@@ -16,25 +23,27 @@
       <div class="resizable-left" id="win1">
         <div class="filemanager">
           <div class="menu-bar">
-            <span class="material-symbols-outlined menu-icon" id="openFolder">folder_open</span>
-            <span class="material-symbols-outlined menu-icon" id="shareFolder">drive_folder_upload</span>
+            <span class="material-symbols-outlined menu-icon" id="openFolder"
+              >folder_open</span
+            >
+            <span class="material-symbols-outlined menu-icon" id="shareFolder"
+              >drive_folder_upload</span
+            >
           </div>
           <pre class="files"></pre>
-
         </div>
       </div>
       <div class="resizable-right" id="win3">
-        <div class="resizable-top" id="win2">
-          <div class="resizable-top" id="win5">
-          </div>
-          <div class="resizable-bottom" id="win6">
-            <pre
-              contenteditable="true"
-              spellcheck="false"
-              id="input"
-              class="editor"
-            ><div></div></pre>
-          </div>
+        <div class="resizable-top editor-window" id="win2">
+          <div class="quick-access-bar"></div>
+          <pre class="path-display">aaaa</pre>
+
+          <pre
+            contenteditable="true"
+            spellcheck="false"
+            id="input"
+            class="editor"
+          ><div></div></pre>
         </div>
         <div class="resizable-bottom" id="win4"></div>
       </div>
@@ -43,8 +52,8 @@
     <script type="module" src="./editor/filemanager.js"></script>
     <script src="./editor/resizable.js"></script>
     <script type="module">
-      import {FileManager} from "./editor/filemanager.js"
-      import {Editor} from "./editor/editor.js"
+      import { FileManager } from "./editor/filemanager.js";
+      import { Editor } from "./editor/editor.js";
 
       document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("main").style.width = window.innerWidth + "px";
@@ -53,15 +62,13 @@
 
         var sizes = {
           win1: 0.175,
-          win2: 0.8,
-          win5: 0.05,
+          win2: 0.8
         };
 
         Resizable.initialise("main", sizes, 2);
 
+        const editor = Editor.getInstance();
 
-        
-        Editor.updatePage();
         FileManager.init();
       });
 
@@ -72,8 +79,6 @@
         );
         Resizable.activeContentWindows[0].childrenResize();
       });
-
-
     </script>
   </body>
 </html>

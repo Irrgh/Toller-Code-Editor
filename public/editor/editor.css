@@ -1,29 +1,24 @@
 body {
     overflow: hidden;
+    user-zoom: none;
 }
 
 
 
-
-
-
+/*--------------------- EDITOR ----------------------- */
 
 
 .editor {
     border: none;
     outline: none; /* Remove the outline when focused */
     padding-left: 0;
-    height: 100%;
+    flex: 1;
     width: 100%;
     overflow: auto;
     background-color: rgb(36, 36, 36);
     color: whitesmoke;
     tab-size: 4;
 }
-
-
-
-
 
 
 
@@ -74,6 +69,10 @@ body {
     border-radius: 4pt;
 }   
 
+* ::-webkit-scrollbar-corner {
+    display: none;
+}
+
 
 .editor::-webkit-scrollbar-thumb:vertical:hover , .vertical-scrolling::-webkit-scrollbar-thumb:vertical {
     background-image: var(--vertical-gradient);
@@ -86,13 +85,69 @@ body {
 }
 
 
+.editor-window {
+    display: flex;
+    flex-direction: column;
+}
 
-.editor::-webkit-scrollbar-corner {
-    display: none;
+
+.quick-access-bar {
+    height: 30px;
+    background-color: #222;
+}
+
+.path-display {
+    align-items: center;
+    height: 20px;
+    background-color: #333;
+    display: inline;
+    color:aliceblue;
+    padding-left: 10px;
+    -webkit-box-shadow: inset 0px -2px 5px 0px #222; 
+    box-shadow: inset 0px -2px 5px 0px #222;
+    user-select: none;
 }
 
 
 
+.quick-access-item {
+    width: 100px;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+    align-items: center;
+}
+
+.image {
+
+    max-width: 100%; /* Make the image take up 100% of the container width */
+    max-height: 100%; /* Make the image take up 100% of the container height */
+    object-fit: cover; /* Ensure the image covers the entire container without distorting */
+    width: auto;
+    height: auto;
+    display: block; /* Remove default inline behavior */
+}
+
+.image-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Ensure content does not overflow the container */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-zoom:zoom;
+}
+
+
+.custom-cursor {
+    position: absolute;
+    width: 10px;
+    height: 20px;
+    background-color: blue;
+}
+
+
+
+/*---------------------  FILEMANAGER ----------------------- */
 
 
 .filemanager {
@@ -104,6 +159,7 @@ body {
     font-size: 9pt;
     display: flex;
     flex-direction: column;
+    cursor: pointer;
 }
 
 .menu-icon {
@@ -133,8 +189,16 @@ body {
     overflow: auto;
 }
 
+.dir-name {
+    display: inline-flex;
+}
 
-.files div:not(.dir):hover{
+.dir {
+    padding-left: 1em;
+}
+
+
+.files .dir-name:Hover, .files .file:hover{
     background-color: gray;
 }
 
@@ -158,31 +222,7 @@ body {
     
 }
 
-.image {
 
-    max-width: 100%; /* Make the image take up 100% of the container width */
-    max-height: 100%; /* Make the image take up 100% of the container height */
-    object-fit: cover; /* Ensure the image covers the entire container without distorting */
-    width: auto;
-    height: auto;
-    display: block; /* Remove default inline behavior */
-}
 
-.image-container {
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* Ensure content does not overflow the container */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-}
-
-.custom-cursor {
-    position: absolute;
-    width: 10px;
-    height: 20px;
-    background-color: blue;
-}
 
 

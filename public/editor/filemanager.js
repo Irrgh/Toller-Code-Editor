@@ -62,13 +62,18 @@ FileManager.redraw = async function () {
 FileManager.drawDir = async function processDirectory(directoryHandle, depth) {
 
     console.log(`Directory: ${directoryHandle.name}`);
+    const nameSpan = document.createElement("div");
     const name = document.createTextNode(directoryHandle.name);
     const div = document.createElement("div");
 
-    div.append(name);
+    nameSpan.append(name);
+    nameSpan.classList.add("dir-name");
+
+
+    div.append(nameSpan);
     div.classList.add("dir");
-    div.style.margin = "0";
-    div.style.marginLeft = `0.5em`
+    div.style.padding = "0";
+    div.style.paddingLeft = `0.5em`
     div.setAttribute("opened","false");
 
 
@@ -138,8 +143,8 @@ FileManager.drawFile = function (fileHandle,depth) {
 
     div.classList.add("file");
     div.append(name);
-    div.style.margin = "0";
-    div.style.marginLeft = `0.5em`;   
+    div.style.padding = "0";
+    div.style.paddingLeft = `0.5em`;   
 
     div.addEventListener("click", function (event) {
         event.preventDefault();
@@ -151,7 +156,7 @@ FileManager.drawFile = function (fileHandle,depth) {
         event.stopPropagation();
         event.preventDefault();
 
-        Editor.loadContent(fileHandle);
+        Editor.getInstance().loadContent(fileHandle);
     })
 
 

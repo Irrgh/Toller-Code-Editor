@@ -3,14 +3,18 @@ const Permissions = require("./permissions.js");
 
 class User {
 
-    constructor (displayname,) {
-        this.displayname = "local"
-        this.selection = {selectionStart : 0, selectionEnd : 0, content : 0}
-        this.permissions = Permissions.adminPermissisons();
+    constructor (displayname,selection,permissions) {
+        this.displayname = displayname;
+        this.selection = selection
+        this.permissions = permissions;
         
     }
 
+    static defaultUser () {
 
+
+        return new User("unknown");
+    }
 
 }
 
