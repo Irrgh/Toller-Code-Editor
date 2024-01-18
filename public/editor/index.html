@@ -23,14 +23,18 @@
       <div class="resizable-left" id="win1">
         <div class="filemanager">
           <div class="menu-bar">
-            <span class="material-symbols-outlined menu-icon" id="openFolder"
-              >folder_open</span
-            >
-            <span class="material-symbols-outlined menu-icon" id="shareFolder"
-              >drive_folder_upload</span
-            >
+            <span class="material-symbols-outlined menu-icon" id="open-folder"
+              >folder_open</span>
+            <span class="material-symbols-outlined menu-icon" id="share-folder"
+              >drive_folder_upload</span>
           </div>
-          <pre class="files"></pre>
+          <pre class="files">
+            
+
+
+
+
+          </pre>
         </div>
       </div>
       <div class="resizable-right" id="win3">
@@ -62,14 +66,14 @@
 
         var sizes = {
           win1: 0.175,
-          win2: 0.8
+          win2: 0.8,
         };
 
         Resizable.initialise("main", sizes, 2);
 
         const editor = Editor.getInstance();
-
-        FileManager.init();
+        const filemanager = FileManager.getInstance();
+    
       });
 
       window.addEventListener("resize", () => {

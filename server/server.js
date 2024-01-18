@@ -3,8 +3,12 @@ const path = require("path");
 const express = require("express");
 const portnumber = 6008;
 const server = express();
+const cookieparser = require("cookie-parser");
+
+
 console.log(path.resolve("./public"));
-//server.use(express.static(path.resolve("./public"), {index : "editor/index.html"}));
+server.use(cookieparser());
+server.use(express.static(path.resolve("./public")));
 server.use(express.urlencoded({ extended: false, limit: '1mb' }));
 server.use(express.json());
 server.listen(portnumber, function () {
@@ -12,26 +16,63 @@ server.listen(portnumber, function () {
 });
 
 
-server.get("/", (req,res) => {
 
-    res.sendFile("editor/index.html");
+const sessions = []
+
+
+
+server.get("/", (req, res) => {
+  
+    let cookie = { username, sessionId} = req.cookies
+  
+    console.log(cookie);
+  
+    let matches = sessions.filter(function (session) {
+      return session.user == username && session.sessionId == sessionId;
+    })
+    
+    console.log(matches);
+    if (matches.length > 0) {
+      res.redirect("/editor");
+    }
+    
+    
+    res.redirect("/login");
+  });
+
+
+
+server.get("/editor", (req,res) => {
+
+    console.log(req.cookies)
+
+
+
+
+
+
+
+    res.sendFile(path.resolve("public/editor/index.html"));
+});
+
+
+server.get("/login", (req,res) =>{
+
+    console.log(__dirname);
+    res.sendFile(path.resolve("public/login/login.html"));
 });
 
 
 
 
+server.get("/workspaces", (req,res) => {
 
-
-server.post("/publish", (req,res) => {
-
-
-
-
-
-
-
-    res.send("eee");
-})
+    
+    console.log(req.cookies);
+    res.writeHead(200)
+    res.write("eee");
+    res.end();
+});
 
 
 

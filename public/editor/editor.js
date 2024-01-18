@@ -215,14 +215,7 @@ class Editor {
         }
     
     
-    
-        console.log(await readFile(fileHandle));
-    
-        console.log(await fileHandle.getFile())
-    
         console.log(fileHandle);
-    
-    
     
     
     
