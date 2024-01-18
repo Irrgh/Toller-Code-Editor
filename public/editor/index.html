@@ -9,9 +9,9 @@
     <link
       rel="stylesheet"
       type="text/css"
-      href="./editor/resizable-style.css"
+      href="./resizable-style.css"
     />
-    <link rel="stylesheet" type="text/css" href="./editor/editor.css" />
+    <link rel="stylesheet" type="text/css" href="./editor.css" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
@@ -52,12 +52,12 @@
         <div class="resizable-bottom" id="win4"></div>
       </div>
     </div>
-    <script type="module" src="./editor/editor.js"></script>
-    <script type="module" src="./editor/filemanager.js"></script>
-    <script src="./editor/resizable.js"></script>
+    <script type="module" src="./editor.js"></script>
+    <script type="module" src="./filemanager.js"></script>
+    <script src="./resizable.js"></script>
     <script type="module">
-      import { FileManager } from "./editor/filemanager.js";
-      import { Editor } from "./editor/editor.js";
+      import { FileManager } from "./filemanager.js";
+      import { Editor } from "./editor.js";
 
       document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("main").style.width = window.innerWidth + "px";

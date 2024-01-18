@@ -4,6 +4,7 @@ const express = require("express");
 const portnumber = 6008;
 const server = express();
 const cookieparser = require("cookie-parser");
+const fs = require("fs");
 
 
 console.log(path.resolve("./public"));
@@ -14,6 +15,9 @@ server.use(express.json());
 server.listen(portnumber, function () {
     console.log(`listening at port ${portnumber}`)
 });
+
+
+server.set("")
 
 
 
@@ -52,7 +56,7 @@ server.get("/editor", (req,res) => {
 
 
 
-    res.sendFile(path.resolve("public/editor/index.html"));
+    res.sendFile("index.html");
 });
 
 
@@ -61,6 +65,18 @@ server.get("/login", (req,res) =>{
     console.log(__dirname);
     res.sendFile(path.resolve("public/login/login.html"));
 });
+
+
+server.get("/process-login", (req,res) => {
+
+
+
+
+
+    res.redirect("/editor");
+});
+
+
 
 
 
