@@ -64,6 +64,8 @@ body {
 }
   
 
+
+
 * ::-webkit-scrollbar-thumb {
     background-color: hsla(0, 0%, 100%, 0.1);
     border-radius: 4pt;
@@ -162,7 +164,7 @@ body {
 }
 
 .menu-icon {
-    font-size: 10pt;
+    font-size: 34pt;
     margin: 3px;
     padding: 3px;
     text-align: center;
@@ -176,17 +178,44 @@ body {
 }
 
 
-.menu-bar {
-    align-items:end;
-    text-align: right;
+.menu-bar-horizontal {
+    align-content: center;
+    display: inline-flex;
+    overflow: overlay;
+    border-bottom: #666 1pt solid;
 }
 
-
+.menu-bar-horizontal::-webkit-scrollbar {
+    display: none;
+}
 
 .files {
     flex:1 ;
     overflow: auto;
 }
+
+
+.nothing-selected {
+    padding-left: 1em;
+    padding-right: 1em;
+    
+    white-space: wrap;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.open-options {
+    margin-bottom: 3em;
+    margin-top: 3em;
+    color: white;
+    background-color: rgb(33, 155, 226);
+    height: 30px;
+    border-radius: 5px;
+    padding: 5px;
+    align-content: center;
+}
+
+
+
 
 .dir-name {
     display: inline-flex;

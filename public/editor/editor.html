@@ -6,40 +6,53 @@
     <title>Toller Editor</title>
     <meta name="description" content="" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="./resizable-style.css"
-    />
+    <link rel="stylesheet" type="text/css" href="./resizable-style.css" />
     <link rel="stylesheet" type="text/css" href="./editor.css" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
+
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 40;
+      }
+    </style>
+
     <link rel="icon" type="image/png" href="../lotuscolor.png" />
   </head>
   <body>
     <div id="main">
       <div class="resizable-left" id="win1">
         <div class="filemanager">
-          <div class="menu-bar">
+          <div class="menu-bar-horizontal">
             <span class="material-symbols-outlined menu-icon" id="open-folder"
-              >folder_open</span>
+              >folder_open</span
+            >
             <span class="material-symbols-outlined menu-icon" id="share-folder"
-              >drive_folder_upload</span>
+              >drive_folder_upload</span
+            >
+            <span class="material-symbols-outlined menu-icon"> note_add </span>
+            <span class="material-symbols-outlined menu-icon">
+              create_new_folder
+            </span>
           </div>
-          <pre class="files">
-            
+
+          <pre class="files"></pre>
+
+          <div class="nothing-selected">
+            <p>You have no folders opened right now.</p>
+            <div class="open-options">Open Folder</div>
+            <div class="open-options">Last Used Folders</div>
+          </div>
+          
 
 
-
-
-          </pre>
         </div>
       </div>
       <div class="resizable-right" id="win3">
         <div class="resizable-top editor-window" id="win2">
-          <div class="quick-access-bar"></div>
+          <div class="quick-access-bar menu-bar"></div>
           <pre class="path-display">aaaa</pre>
 
           <pre
@@ -65,7 +78,7 @@
           window.innerHeight + "px";
 
         var sizes = {
-          win1: 0.175,
+          win1: 0.15,
           win2: 0.8,
         };
 
@@ -73,7 +86,6 @@
 
         const editor = Editor.getInstance();
         const filemanager = FileManager.getInstance();
-    
       });
 
       window.addEventListener("resize", () => {

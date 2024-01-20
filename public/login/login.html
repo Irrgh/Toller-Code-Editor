@@ -1,42 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Editor</title>
+    <link rel="stylesheet" href="../login/styleLogin.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Editor</title>
-  <link rel="stylesheet" href = "styleLogin.css">
-  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-</head>
-
-<body>
-
+  <body>
     <div class="wrapper">
-        <form action="/process-login">
-            <h1>Login</h1>
-            <div class="input-box">
-                <input type="text" placeholder="Username" required>
-                <i class='bx bxs-user'></i>
-            </div>
+      <form action="/process-login" method="post" id="loginForm">
+        <h1>Login</h1>
+        <div class="input-box">
+          <input
+            type="text"
+            placeholder="Username"
+            name="username"
+            required
+            autocomplete="off"
+          />
+          <i class="bx bxs-user"></i>
+        </div>
 
-            <div class="input-box">
-                <input type="password" placeholder="Password" required>
-                <i class='bx bxs-lock-alt'></i>
-            </div>
+        <div class="input-box">
+          <input
+            type="password"
+            placeholder="Password"
+            name="password"
+            required
+            autocomplete="off"
+          />
+          <i class="bx bxs-lock-alt"></i>
+        </div>
 
-            <div class="remember-forgot">
-                <label><input type ="checkbox"> Remember me </label>
-                <a href="#">Forgot Password?</a>
-            </div>
+        <div class="error-display">
+          <label id="error"></label>
+        </div>
 
-            <button type="submit" class="btn">Login</button>
+        <button type="button" class="btn" id="submit">Login</button>
 
-            <div class="register-link">
-                <p>Dont have an account? <a href="#">Register</a></p>
-            </div>
-
-        </form>
+        <div class="register-link">
+          <p>Dont have an account? <a href="/register">Register</a></p>
+        </div>
+      </form>
     </div>
-</body>
+    <script>
+      const form = document.querySelector("#loginForm");
+      const submit = document.querySelector("#submit");
+
+      submit.onclick = submitForm; 
+      
+      
+      
+      
+      
+      
+      function submitForm() {
+        
+        const formData = new FormData(form);
+
+        for (const pair of formData.entries()) {
+          console.log(pair[0] + ", " + pair[1]);
+        }
+
+        const urlEncoded = new URLSearchParams(formData);
+
+
+        var request = new XMLHttpRequest();
+        request.open("POST", "/process-login", true);
+        request.onload = function () {
+            
+
+            const res = JSON.parse(request.responseText);
+
+            if (request.status == 200) {
+
+                window.location.href = res.redirectUrl;
+            } else {
+
+                document.querySelector("#error").innerText = res.message;
+            }
+
+        }
+        request.send(urlEncoded);
+    
+
+      };
+    </script>
+  </body>
 </html>

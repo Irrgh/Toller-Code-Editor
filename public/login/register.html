@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Editor</title>
+  <link rel="stylesheet" href = "../login/styleLogin.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <form action="/process-register" method="post" id="registerForm">
+            <h1>Register</h1>
+            <div class="input-box">
+                <input type="text" placeholder="Username" name="username" required autocomplete="off">
+                <i class='bx bxs-user'></i>
+            </div>
+
+            <div class="input-box">
+              <input type="email" placeholder="Email" name="email" required autocomplete="off">
+              <span class="material-symbols-outlined">
+                contact_mail
+                </span>
+          </div>
+
+
+            <div class="input-box">
+                <input type="password" placeholder="Password" name="password" required autocomplete="off" minlength="6">
+                <i class='bx bxs-lock-alt'></i>
+            </div>
+
+            <div class="error-display">
+              <label id="error"></label>
+            </div>
+
+            <button type="button" class="btn" id="submit">Register</button>
+
+            <div class="register-link">
+                <p>Already have an account? <a href="/login">Login</a></p>
+            </div>
+
+        </form>
+    </div>
+    <script>
+      const form = document.querySelector("#registerForm");
+      const submit = document.querySelector("#submit");
+
+      submit.onclick = submitForm;
+
+      console.log(form);
+      
+      
+      
+      
+      
+      
+      function submitForm() {
+        
+        const formData = new FormData(form);
+
+        for (const pair of formData.entries()) {
+          console.log(pair[0] + ", " + pair[1]);
+        }
+
+        const urlEncoded = new URLSearchParams(formData);
+
+
+        var request = new XMLHttpRequest();
+        request.open("POST", "/process-register", true);
+        request.onload = function () {
+            
+
+            const res = JSON.parse(request.responseText);
+
+            if (request.status == 200) {
+
+                window.location.href = res.redirectUrl;
+            } else {
+
+                document.querySelector("#error").innerText = res.message;
+            }
+
+        }
+        request.send(urlEncoded);
+    
+
+      };
+      </script>
+
+
+
+</body>
+</html>
