@@ -85,15 +85,15 @@ Resizable.ContentWindow = class{
       this.getDiv().classList.add("contentWindow");
     }
 
+
     this.children = [];
     this.isSplitHorizontally = false;
     this.isSplitVertically = false;
     this.childResizer = null;
-    this.minWidth = 20;
-    this.minHeight = 20;
-    this.originalMinSize = 20;
+    this.minWidth = (div.attributes.minwidth ? parseInt(div.attributes.minwidth.value) : 30);
+    this.minHeight = (div.attributes.minheight ? parseInt(div.attributes.minheight.value) : 30);
+    this.originalMinSize = 20
     this.childResizerThickness = Resizable.resizerThickness;
-
 
     this.getDiv().style.position = "absolute";
     this.getDiv().style.overflow = "hidden";
@@ -292,6 +292,8 @@ Resizable.ContentWindow = class{
       //Recursively call this on all descendants
       this.children[0].calculateMinWidthHeight();
       this.children[1].calculateMinWidthHeight();
+
+
       if(this.isSplitHorizontally){
         this.minWidth = this.children[0].minWidth + this.children[1].minWidth;
         if(this.children[0].minHeight > this.children[1].minHeight)
@@ -306,8 +308,8 @@ Resizable.ContentWindow = class{
           this.minWidth = this.children[1].minWidth;
       }
     }else{
-      this.minWidth = this.originalMinSize;
-      this.minHeight = this.originalMinSize;
+      //this.minWidth = this.originalMinSize;
+      //this.minHeight = this.originalMinSize;
 
     }
 

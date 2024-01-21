@@ -1,6 +1,7 @@
 body {
     overflow: hidden;
     user-zoom: none;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 
@@ -163,6 +164,11 @@ body {
     cursor: pointer;
 }
 
+.title {
+    padding: 5px;
+}
+
+
 .menu-icon {
     font-size: 34pt;
     margin: 3px;
@@ -218,7 +224,7 @@ body {
 
 
 .dir-name {
-    display: inline-flex;
+    flex:1
 }
 
 .dir {
@@ -244,12 +250,17 @@ body {
 
 
 
-.dir::before {
+.dir[opened=true] .dir-name::before{
+    display: inline;
+    content: '\1F4C2'; /* Unicode character for a folder */
+    
+}
+
+.dir[opened=false] .dir-name::before {
     display: inline;
     content: '\1F4C1'; /* Unicode character for a folder */
     
 }
-
 
 
 

@@ -23,8 +23,9 @@
   </head>
   <body>
     <div id="main">
-      <div class="resizable-left" id="win1">
+      <div class="resizable-left" id="win1" minwidth="145">
         <div class="filemanager">
+          <h3 class="title">Explorer</h3>
           <div class="menu-bar-horizontal">
             <span class="material-symbols-outlined menu-icon" id="open-folder"
               >folder_open</span
@@ -50,8 +51,8 @@
 
         </div>
       </div>
-      <div class="resizable-right" id="win3">
-        <div class="resizable-top editor-window" id="win2">
+      <div class="resizable-right" id="win3" minwidth="500">
+        <div class="resizable-top editor-window" id="win2" minwidth="500">
           <div class="quick-access-bar menu-bar"></div>
           <pre class="path-display">aaaa</pre>
 
@@ -62,11 +63,10 @@
             class="editor"
           ><div></div></pre>
         </div>
-        <div class="resizable-bottom" id="win4"></div>
+        <div class="resizable-bottom" id="win4" minwidth="500"></div>
       </div>
     </div>
     <script type="module" src="./editor.js"></script>
-    <script type="module" src="./filemanager.js"></script>
     <script src="./resizable.js"></script>
     <script type="module">
       import { FileManager } from "./filemanager.js";
@@ -85,7 +85,7 @@
         Resizable.initialise("main", sizes, 2);
 
         const editor = Editor.getInstance();
-        const filemanager = FileManager.getInstance();
+        //const filemanager = FileManager.getInstance();
       });
 
       window.addEventListener("resize", () => {

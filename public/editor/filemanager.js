@@ -14,6 +14,7 @@ class FileManager {
     shareFolder;
     openDirs;
     files;
+    selected;
     static instance;
 
     constructor() {
@@ -132,13 +133,13 @@ class FileManager {
         div.setAttribute("opened", "false");
 
 
-        div.addEventListener("dblclick", function (event) {
+        nameSpan.addEventListener("dblclick", function (event) {
             event.preventDefault();
 
         })
 
-
-        div.addEventListener("click", async (event) => {
+        
+        nameSpan.addEventListener("click", async (event) => {
 
             event.preventDefault();
 
@@ -162,13 +163,11 @@ class FileManager {
                     }
                 }
 
-
-
             } else if (div.getAttribute("opened") === "true") {
                 div.setAttribute("opened", "false");
 
-                this.innerHTML = "";
-                div.appendChild(name);
+                div.innerHTML = "";
+                div.appendChild(nameSpan);
 
 
 
@@ -193,18 +192,26 @@ class FileManager {
 
         div.classList.add("file");
         div.append(name);
-        div.style.padding = "0";
-        div.style.paddingLeft = `0.5em`;
+        div.style.margin = "0";
+        div.style.marginLeft = `0.5em`;
 
-        div.addEventListener("click", function (event) {
+        div.addEventListener("click", (event) => {
             event.preventDefault();
             event.stopPropagation();
             console.log(`${fileHandle.name} was clicked`);
         })
 
-        div.addEventListener("dblclick", async function (event) {
+        div.addEventListener("dblclick", async (event) => {
             event.stopPropagation();
             event.preventDefault();
+
+            console.log(this);
+
+            this.openDirs.forEach(async (root) => {
+
+                console.log(await root.resolve(fileHandle));
+
+            });
 
             Editor.getInstance().loadContent(fileHandle);
         })
