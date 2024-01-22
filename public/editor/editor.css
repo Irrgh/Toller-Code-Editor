@@ -204,24 +204,33 @@ body {
 .nothing-selected {
     padding-left: 1em;
     padding-right: 1em;
-    
-    white-space: wrap;
     font-family: Arial, Helvetica, sans-serif;
+    align-items: center;
+    justify-content: center;
 }
 
 .open-options {
+    white-space: wrap;
+    display: flex;
     margin-bottom: 3em;
     margin-top: 3em;
     color: white;
-    background-color: rgb(33, 155, 226);
-    height: 30px;
+    background-color: rgb(21, 139, 207);
+    min-height: 30px;
     border-radius: 5px;
-    padding: 5px;
-    align-content: center;
+    padding: 3px;
+    align-items: center;
+    justify-content: center;
+}
+
+.open-options:hover {
+    background-color: rgb(70, 158, 209);;
 }
 
 
-
+.invisible {
+    visibility: hidden;
+}
 
 .dir-name {
     flex:1

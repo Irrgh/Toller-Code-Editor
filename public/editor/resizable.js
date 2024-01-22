@@ -90,10 +90,11 @@ Resizable.ContentWindow = class{
     this.isSplitHorizontally = false;
     this.isSplitVertically = false;
     this.childResizer = null;
-    this.minWidth = (div.attributes.minwidth ? parseInt(div.attributes.minwidth.value) : 30);
-    this.minHeight = (div.attributes.minheight ? parseInt(div.attributes.minheight.value) : 30);
+    this.minWidth = (div.attributes.minwidth ? parseFloat(div.attributes.minwidth.value)*document.body.clientWidth : 30);
+    this.minHeight = (div.attributes.minheight ? parseFloat(div.attributes.minheight.value)*document.body.clientWidth : 30);
     this.originalMinSize = 20
     this.childResizerThickness = Resizable.resizerThickness;
+
 
     this.getDiv().style.position = "absolute";
     this.getDiv().style.overflow = "hidden";
@@ -230,6 +231,11 @@ Resizable.ContentWindow = class{
     this.children[0].childrenResize();
     this.children[1].childrenResize();
 
+
+    this.minWidth = (this.getDiv().attributes.minwidth ? parseFloat(this.getDiv().attributes.minwidth.value)*document.body.clientWidth : 30);
+    this.minHeight = (this.getDiv().attributes.minheight ? parseFloat(this.getDiv().attributes.minheight.value)*document.body.clientWidth : 30);
+
+
     this.repositionChildResizer();
 
   }
@@ -240,6 +246,11 @@ Resizable.ContentWindow = class{
 
   changeSize(width, height){
     
+    this.minWidth = (this.getDiv().attributes.minwidth ? parseFloat(this.getDiv().attributes.minwidth.value)*document.body.clientWidth : 30);
+    this.minHeight = (this.getDiv().attributes.minheight ? parseFloat(this.getDiv().attributes.minheight.value)*document.body.clientWidth : 30);
+
+
+
     if(width < this.minWidth){
       width = this.minWidth;
     }

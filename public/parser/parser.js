@@ -1,6 +1,7 @@
 const fs = require("fs");
 const Stack = require("./stack.js");
 const lang = require("./language.js");
+const path = require("path");
 
 
 function write (data, path) {
@@ -11,6 +12,44 @@ function write (data, path) {
 function read(path) {
     return fs.readFileSync(path,{ encoding: 'utf8', flag: 'r' });
 }
+
+
+class Lexer {
+
+    lastResult;
+    userPositions;          //[{user:"name", index:123}]
+    language;
+
+
+
+    constructor (language) {
+        this.language = language;
+    }
+
+    lex = (string,startPos) => {
+
+        startPos = this.lastResult ? startPos : 0;   // if there is no previous result start pos must be 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+}
+
 
 
 
@@ -216,12 +255,14 @@ module.exports = {read, write, lex}
 
 let startTime = performance.now();
 
-eee = lex(JSON.parse(read("parser/html.json")),read("editor/index.html"))
+console.log(path.resolve("public/parser/html.json"));
+
+eee = lex(JSON.parse(read("public/parser/html.json")),read("public/editor/editor.html"))
 
 let endTime = performance.now();
 
 
-//console.log(eee);
+console.log(eee);
 
 console.log(`time needed: ${endTime-startTime} ms`);
 
