@@ -138,12 +138,43 @@ class Editor {
 
 
         recent.addEventListener("click", async (event) => {
-            common();
+            //common();
 
             // look up indexedDb somehow ???
             
-            
-            console.log(await this.db.readAll());
+            const res = await this.db.readAll();
+
+            console.log(res);
+
+            this.fileDisplay.innerHTML="";
+
+            const links = document.createElement("ul");
+
+            res.forEach((stored) =>{
+
+                const link = document.createElement("li");
+                link.append(document.createTextNode(stored.name));
+
+                link.addEventListener("click", (event) => {
+                    event.preventDefault();
+
+                    console.log(stored.fileHandle.queryPermission({mode:"readwrite"}));
+                    stored.fileHandle.requestPermission({mode:"readwrite"});
+                    this.openDirs.push(stored.fileHandle);
+                    this.redraw();
+
+                    common();
+                })
+
+                links.append(link);
+
+
+
+            });
+            nothing.append(links);
+
+
+
 
 
         });
