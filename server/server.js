@@ -151,6 +151,7 @@ server.post("/process-register", (req,res) => {
 
 
         users.push({name:username,email:email,password:password});
+        fileUtil.write("users.json",JSON.stringify(users));
 
         res.status(200).json({success:true,redirectUrl:"/editor"});
     }

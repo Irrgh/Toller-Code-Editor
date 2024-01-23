@@ -12,7 +12,11 @@ class FileUtil {
     }
 
 
+    static write (file,content) {
 
+
+        fs.writeFileSync(path.join(__dirname,file),content,{encoding:"utf-8"});
+    }
 
 
 }

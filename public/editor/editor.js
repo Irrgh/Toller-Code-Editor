@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "../util/userFile.js";
-import {Database} from "../util/database.js";
+import { Database } from "../util/database.js";
 
 
 
@@ -18,7 +18,7 @@ class Editor {
     createFolder;
     openFolder;
     shareFolder;
-    openDirs;
+    openDir;
     files;
     selected;
 
@@ -41,7 +41,7 @@ class Editor {
         this.openFolder = this.fileManager.querySelector("#open-folder");
         this.shareFolder = this.fileManager.querySelector("#share-folder");
         // this.files = this.fileManager.querySelector(".files");
-        this.openDirs = [];
+        this.openDir = undefined;
 
         this.openFolder.addEventListener("click", this.handleDirectorySelect);
         this.shareFolder.addEventListener("click", this.handleShareFolder);
@@ -77,7 +77,7 @@ class Editor {
         return Editor.instance;
     }
 
-    addInvisibleScrollForMenuBars() {
+    addInvisibleScrollForMenuBars = () => {
         this.menuBars.forEach((menu) => {
 
             let scrollPercentage = 0;
@@ -130,10 +130,16 @@ class Editor {
         }
 
 
-        any.addEventListener("click", (event) => {
-            common();
+        any.addEventListener("click", async(event) => {
             
-            this.handleDirectorySelect();
+
+            const res = await this.handleDirectorySelect();
+
+            if (res === "success") {
+                common();
+                this.redraw();
+            }
+
         });
 
 
@@ -141,42 +147,40 @@ class Editor {
             //common();
 
             // look up indexedDb somehow ???
-            
+
             const res = await this.db.readAll();
 
             console.log(res);
 
-            this.fileDisplay.innerHTML="";
+            this.fileDisplay.innerHTML = "";
 
             const links = document.createElement("ul");
 
-            res.forEach((stored) =>{
+            res.forEach((stored) => {
 
                 const link = document.createElement("li");
                 link.append(document.createTextNode(stored.name));
 
-                link.addEventListener("click", (event) => {
+                link.addEventListener("click", async (event) => {
                     event.preventDefault();
 
-                    console.log(stored.fileHandle.queryPermission({mode:"readwrite"}));
-                    stored.fileHandle.requestPermission({mode:"readwrite"});
-                    this.openDirs.push(stored.fileHandle);
-                    this.redraw();
+                    console.log(stored.fileHandle.queryPermission({ mode: "readwrite" }));
+                    const perm = await stored.fileHandle.requestPermission({ mode: "readwrite" });
 
-                    common();
+
+                    if(perm === "granted") {
+                        this.openDir = stored.fileHandle;
+
+                    common();    
+                    this.redraw();
+                    }
+                    
                 })
 
                 links.append(link);
 
-
-
             });
             nothing.append(links);
-
-
-
-
-
         });
 
         coop.addEventListener("click", (event) => {
@@ -197,7 +201,7 @@ class Editor {
 
 
 
-    addInputBehavior() {
+    addInputBehavior = () => {
 
 
 
@@ -256,18 +260,18 @@ class Editor {
 
                 if (firstNewLinePos === -1) {                               // everything will be pasted into the current line
 
-                    insertOnSameLine(document.createTextNode(plainText));
+                    this.insertOnSameLineAfterSelection(document.createTextNode(plainText));
 
                 } else {
 
                     const sameLine = plainText.slice(0, firstNewLinePos);    // stuff added on the same line
-                    const line = insertOnSameLine(document.createTextNode(sameLine));   // returns dom element "line" i hope
+                    const line = this.insertOnSameLineAfterSelection(document.createTextNode(sameLine));   // returns dom element "line" i hope
 
                     plainText = plainText.slice(firstNewLinePos + 1);       // already added chars get cut off
 
-                    const fragment = stringToLineFragment(plainText);
+                    const fragment = Editor.stringToLineFragment(plainText);
 
-                    insertAfterLine(line, fragment);
+                    this.insertAfterLine(line, fragment);
 
 
                 }
@@ -307,7 +311,7 @@ class Editor {
 
     }
 
-    fixForEmptyDocument() {
+    fixForEmptyDocument = () => {
         this.fileDisplay.focus();
         const sel = window.getSelection();
         const range = document.createRange();
@@ -332,7 +336,7 @@ class Editor {
         sel.addRange(range);
     }
 
-    async loadContent(fileHandle) {
+    loadContent = async (fileHandle) => {
 
         const file = await fileHandle.getFile()
 
@@ -382,7 +386,7 @@ class Editor {
 
     }
 
-    static getTextContentFromRange(range) {
+    static getTextContentFromRange = (range) => {
         const documentFragment = range.cloneContents();
         const textContent = [];
 
@@ -410,7 +414,7 @@ class Editor {
 
 
     // TODO: need to highlighting to this
-    static stringToLineFragment(string) {
+    static stringToLineFragment = (string) => {
 
 
         const fragment = document.createDocumentFragment();
@@ -444,7 +448,7 @@ class Editor {
     }
 
 
-    getSelectionIndecies() {
+    getSelectionIndecies = () => {
 
         const selection = window.getSelection();
 
@@ -475,53 +479,69 @@ class Editor {
         return { selectionStart: startStr.length, selectionEnd: endStr.length, content: contentStr };
     }
 
-    addScrollBehavior() {
+    addScrollBehavior = () => {
         var scrolling = false;
 
 
 
         this.fileDisplay.addEventListener("wheel", (event) => {
             const isVerticalScroll = Math.abs(event.deltaY) > Math.abs(event.deltaX);
+            const isHorizontalScroll = Math.abs(event.deltaY) < Math.abs(event.deltaX);
 
 
             if (isVerticalScroll && scrolling) {
 
                 this.fileDisplay.classList.add("vertical-scrolling");
                 // Your vertical scroll logic here
-            } else {
+            } else if (isHorizontalScroll && scrolling){
                 this.fileDisplay.classList.add("horizontal-scrolling");
             }
 
 
             const scrollPercentageVertical = (scrollPos) => {
-                return Math.round(scrollPos) / Math.round(this.fileDisplay.scrollHeight - this.fileDisplay.clientHeight);
+                return Math.round(scrollPos) / Math.round(this.fileDisplay.scrollHeight);
             }
 
             const scrollPercentageHorizontal = (scrollPos) => {
-                return Math.round(scrollPos) / Math.round(this.fileDisplay.scrollWidth - this.fileDisplay.clientWidth);
+                return Math.round(scrollPos) / Math.round(this.fileDisplay.scrollWidth);
             }
 
 
+            const makeGradientColors = (s, e) => {
+
+                const start = s*301;
+                const end = e*301;
+
+                const diff = end -start;
+
+
+
+                return  `hsl(${Math.round(start)}, 70%, 50%) 0%,
+                         hsl(${Math.round(start+diff*(1/6))}, 70%, 50%) 17%,
+                         hsl(${Math.round(start+diff*(2/6))}, 70%, 50%) 34%,
+                         hsl(${Math.round(start+diff*(3/6))}, 70%, 50%) 50%,
+                         hsl(${Math.round(start+diff*(4/6))}, 70%, 50%) 66%,
+                         hsl(${Math.round(start+diff*(5/6))}, 70%, 50%) 83%,
+                         hsl(${Math.round(start+diff)}, 70%, 50%) 100%)`
+            };
 
 
 
 
 
             // Calculate a color based on the scroll position
-            const newColorVertical1 = `hsl(${scrollPercentageVertical(this.fileDisplay.scrollTop) * 360}, 70%, 80%)`;
-            const newColorVertical2 = `hsl(${scrollPercentageVertical(this.fileDisplay.scrollTop) * 360}, 70%, 80%)`;
+            const colorVert = makeGradientColors(scrollPercentageVertical(this.fileDisplay.scrollTop),scrollPercentageVertical(this.fileDisplay.scrollTop+this.fileDisplay.clientHeight));
 
-            const newColorHorizontal1 = `hsl(${scrollPercentageHorizontal(this.fileDisplay.scrollLeft) * 360}, 70%, 80%)`;
-            const newColorHorizontal2 = `hsl(${scrollPercentageHorizontal(this.fileDisplay.scrollLeft) * 360}, 70%, 80%)`;
+            const colorHori = makeGradientColors(scrollPercentageHorizontal(this.fileDisplay.scrollLeft),scrollPercentageHorizontal(this.fileDisplay.scrollLeft+this.fileDisplay.clientWidth));
 
 
 
             // Set the color of the scrollbar thumb
             // Add the "scrolling" class to the target element
-            this.fileDisplay.style.setProperty('--vertical-gradient', `linear-gradient(180deg in hsl longer hue,${newColorVertical1}, ${newColorVertical2})`);
-            this.fileDisplay.style.setProperty('--horizontal-gradient', `linear-gradient(deg90 in hsl longer hue, ${newColorHorizontal1}, ${newColorHorizontal2})`);
+            this.fileDisplay.style.setProperty('--vertical-gradient', `linear-gradient(180deg,${colorVert}`);
+            this.fileDisplay.style.setProperty('--horizontal-gradient', `linear-gradient(90deg,${colorHori}`);
 
-        });
+        },{passive:true});
 
 
         this.fileDisplay.addEventListener("scroll", () => {
@@ -536,11 +556,11 @@ class Editor {
             }, 350);
 
 
-        });
+        },{passive:true});
     }
 
 
-    insertOnSameLineAfterSelection(node) {
+    insertOnSameLineAfterSelection = (node) => {
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
 
@@ -559,7 +579,7 @@ class Editor {
         // if im not retarted that should be the <div class="line"> where i just add content
     }
 
-    insertAfterLine(line, fragment) {
+    insertAfterLine = (line, fragment) => {
 
         const range = document.createRange();
 
@@ -570,7 +590,7 @@ class Editor {
 
     }
 
-    getTextContent() {
+    getTextContent = () => {
 
         const textContent = [];
         function extractText(node) {
@@ -597,33 +617,10 @@ class Editor {
 
     redraw = async () => {
 
-
-
         let newFrag = document.createDocumentFragment();
 
-
-
-
-
-
-
-        // Fetch all entries asynchronously
-        const entries = await Promise.all(
-            Array.from(this.openDirs.values()).map(async (entry) => {
-                if (entry.kind === "file") {
-
-                    return this.drawFile(entry, 0);
-                } else if (entry.kind === "directory") {
-
-                    // Recursively process subdirectories
-                    return await this.drawDir(entry, 0);
-                }
-            })
-        );
-
-        // Append all entries to the item
-        entries.forEach((entry) => newFrag.appendChild(entry));
-
+        newFrag.append(await this.drawDir(this.openDir, 0));
+        
 
         this.files.innerHTML = "";
         this.files.append(newFrag);
@@ -637,6 +634,7 @@ class Editor {
     drawDir = async (directoryHandle, depth) => {
 
         console.log(`Directory: ${directoryHandle.name}`);
+        console.log(directoryHandle);
         const nameSpan = document.createElement("div");
         const name = document.createTextNode(directoryHandle.name);
         const div = document.createElement("div");
@@ -694,15 +692,16 @@ class Editor {
 
 
 
-        })
 
+        });
 
+        
         return div;
     }
 
 
 
-    drawFile(fileHandle, depth) {
+    drawFile = (fileHandle, depth) => {
 
 
         console.log(`File: ${fileHandle.name}`);
@@ -726,16 +725,12 @@ class Editor {
 
             console.log(this);
 
-            this.openDirs.forEach(async (root) => {
+            const path = await this.openDir.resolve(fileHandle);
 
+            console.log(path);
 
-                const path = await root.resolve(fileHandle)
+            this.pathDisplay.innerText = path
 
-                console.log(path);
-
-                this.pathDisplay.innerText = path
-
-            });
 
             this.loadContent(fileHandle);
         })
@@ -747,78 +742,26 @@ class Editor {
 
 
 
-
-    async handleFileSelect() {
-
-        try {
-            // Request file system access
-            const fileHandle = await window.showOpenFilePicker();
-            const entry = fileHandle[0];
-
-            if (entry.kind === "file") {
-                // Read content from a file
-                const fileContent = await readFile(entry);
-                console.log(`File Content (${entry.name}):`, fileContent);
-
-                // Write content back to the file (modify as needed)
-                //await writeFile(entry, 'Modified content');
-                console.log(`File Content after modification (${entry.name}):`, await readFile(entry));
-            } else {
-                console.log("Not a file" + fileHandle.isFile);
-            }
-
-            this.openDirs.push(entry);
-            this.redraw();
-
-
-        } catch (error) {
-            console.error('Error accessing the directory:', error);
-        }
-
-
-
-
-    }
-
-
-
     handleDirectorySelect = async () => {
         try {
             // Request file system access
             const directoryHandle = await window.showDirectoryPicker();
 
-            // Iterate through the directory entries
-            //for await (const entry of directoryHandle.values()) {
-            //    if (entry.kind === "file") {
-            //        // Read content from a file
-            //        const fileContent = await readFile(entry);
-            //        console.log(`File Content (${entry.name}):`, fileContent);
-            //
-            //
-            //    } else {
-            //        console.log(entry);
-            //    }
-            //
-            //
-            //}
-            console.log(this);
-
-            this.openDirs.push(directoryHandle);
-            this.redraw();
-
-            console.log(this);
+            this.openDir = directoryHandle;
+            
             console.log(this.db);
 
             this.db.write(directoryHandle);
 
-
+            return "success";
         } catch (error) {
             console.error('Error accessing the directory:', error);
+            return "error";
         }
     }
 
 
-    handleShareFolder() {
+    handleShareFolder = () => {
 
 
         var request = new XMLHttpRequest();

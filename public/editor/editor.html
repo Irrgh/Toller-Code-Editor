@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Toller Editor</title>
-    <meta name="description" content="" />
+    <meta name="description" content="A Cooperative Code Editor written in JavaScript" />
+    <meta name="theme-color" content="red">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" type="text/css" href="./resizable-style.css" />
     <link rel="stylesheet" type="text/css" href="./editor.css" />
+    <link rel="manifest" href="./manifest.json">
+
     <link
+      async
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
@@ -43,7 +47,7 @@
       <div class="resizable-right" id="win3" minwidth="0.3">
         <div class="resizable-top editor-window" id="win2" minwidth="0.3">
           <div class="quick-access-bar menu-bar"></div>
-          <pre class="path-display">aaaa</pre>
+          <pre class="path-display"></pre>
 
           <pre
             contenteditable="true"
@@ -55,9 +59,9 @@
         <div class="resizable-bottom" id="win4" minwidth="0.3"></div>
       </div>
     </div>
-    <script type="module" src="./editor.js"></script>
-    <script src="./resizable.js"></script>
-    <script type="module">
+    <script defer type="module" src="./editor.js"></script>
+    <script defer src="./resizable.js"></script>
+    <script defer type="module">
       import { Editor } from "./editor.js";
 
       document.addEventListener("DOMContentLoaded", () => {
