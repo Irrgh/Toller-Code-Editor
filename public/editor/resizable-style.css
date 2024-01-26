@@ -16,13 +16,12 @@
   position: absolute;
   z-index: 100;
   background-color: #7f9292;
-  transition: transform ease-in-out 0.2s, color ease 0.2s
+  transition: transform ease-in-out 0.2s, color ease-in-out 0.2s
 }
 
 .resizer:hover {
   background-color: #83d2ed;
   transform: scale(2.5);
-  
 }
 
 

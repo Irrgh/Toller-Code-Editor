@@ -11,7 +11,7 @@ class Stack {
     // Remove and return the top element from the stack
     pop() {
         if (this.isEmpty()) {
-            return null; // Stack is empty
+            throw "Stack is empty" // Stack is empty
         }
         return this.items.pop();
     }
@@ -45,10 +45,23 @@ class Stack {
 
     copy() {
         const stackCopy = new Stack();
-        this.toArray().forEach(item => stackCopy.push(item));
+        stackCopy.items = [...this.toArray()];
         return stackCopy;
     }
 
 }
 
+
+
 module.exports = Stack;
+
+
+//test = new Stack();
+//test.push(2);
+//test.push(3);
+//
+//copy = test.copy();
+//
+//test.push(4);
+//
+//console.log(test,copy);

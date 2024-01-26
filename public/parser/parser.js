@@ -4,13 +4,13 @@ const lang = require("./language.js");
 const path = require("path");
 
 
-function write (data, path) {
-    return fs.writeFileSync(path,data);
+function write(data, path) {
+    return fs.writeFileSync(path, data);
 }
 
 
 function read(path) {
-    return fs.readFileSync(path,{ encoding: 'utf8', flag: 'r' });
+    return fs.readFileSync(path, { encoding: 'utf8', flag: 'r' });
 }
 
 
@@ -22,250 +22,464 @@ class Lexer {
 
 
 
-    constructor (language) {
+    constructor(language) {
         this.language = language;
     }
 
-    lex = (string,startPos) => {
-
-        startPos = this.lastResult ? startPos : 0;   // if there is no previous result start pos must be 0
 
 
 
 
+    lex = (selection, action) => {
+
+
+        let initStart = performance.now();
+
+        // action is something like "paste","backspace","delete","move"
+
+        // override = selection.start < selection.end
+
+
+        //const startPos = this.lastResult ? startPos : 0;   // if there is no previous result start pos must be 0
+        const override = selection.selectionStart < selection.selectionEnd;
+
+        var before;         // does not need to be parsed again
+        var after;          // might have to be parsed again
+        var inputString;     // has to be parsed
+
+
+        switch (action.type) {
+
+            case ("paste"):
+                if (override) {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart);
+                    before = temp.beforeInsert;
+                    const temp2 = Lexer.split(before, selection.selectionEnd);
+                    after = temp2.afterInsert;
+                    inputString = action.content;
+                } else {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart);
+                    before = temp.beforeInsert;
+                    after = temp.afterInsert;
+                    inputString = action.content;
+                }
+                break;
+            case ("backspace"):
+                if (override) {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart);
+                    before = temp.beforeInsert;
+                    const temp2 = Lexer.split(before, selection.selectionEnd);
+                    after = temp2.afterInsert;
+                    inputString = "";
+                } else {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart - 1);    // removes the single char before selection.start
+                    before = temp.beforeInsert;
+                    const temp2 = Lexer.split(before, selection.selectionStart);
+                    after = temp2.afterInsert;
+                    inputString = "";
+                }
+                break;
+            case ("delete"):
+                if (override) {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart);
+                    before = temp.beforeInsert;
+                    const temp2 = Lexer.split(before, selection.selectionEnd);
+                    after = temp2.afterInsert;
+                    inputString = ""
+                } else {
+                    const temp = Lexer.split(this.lastResult, selection.selectionStart);    // removes the single char after selection.start
+                    before = temp.beforeInsert;
+                    const temp2 = Lexer.split(before, selection.selectionStart + 1);
+                    after = temp2.afterInsert;
+                    inputString = "";
+                }
+                break;
+            case ("move"):
+                if (override) {
+
+                } else {// need some cursor / selection mover function
+
+                }
+                break;
+            default:
+                throw `unknown action: ${action}`;
+
+        }
+
+        let output = before;                                           // output initiation
+
+
+        if (before.length !== 0) {
+            var scopeStack = before[before.length - 1].stack;           // stack initiation
+        } else {
+            var scopeStack = new Stack();
+            scopeStack.push(this.language.main);
+        }
+
+        var inputBuffer = "";
+
+        let inputChars = inputString.split("");
+
+
+        let initEnd = performance.now()
+        let initTime = initEnd - initStart;
+        // Initiation over
+
+        //console.log(`init (split) took ${initEnd-initStart}ms`);
+        
+
+        let parseInsertStart = performance.now();
+
+        var buffer = "";
+
+
+        let partialResult = this.parseStep(output,scopeStack,buffer,inputChars);
+        
+        output = partialResult.output;
+        scopeStack = partialResult.stack;
+        buffer = partialResult.buffer;
+        
+
+        let parseInsertEnd = performance.now();
+
+        let parseInsertTime = parseInsertEnd - parseInsertStart;
+
+        //console.log(`insert parsing took ${parseEnd-parseStart}ms`);
 
 
 
+        if (output.length !== 0 && after.length !== 0) {                                             // inserted input did not change the scopeStack!
+            if (output[output.length - 1].stack == after[0].stack) {
+                
+                
+                this.lastResult = output.concat(after);
+
+                //console.log(`efficient combine took ${combineEnd-combineStart}ms`);
+                return {result:this.lastResult,times:{parseInsert:parseInsertTime,init:initTime}};
+            }
+        }
+
+
+        let afterToStringStart = performance.now();
+
+        inputChars = Lexer.resultToString(after).split("");
+
+        let afterToStringEnd = performance.now();
+        let afterToStringTime = afterToStringEnd - afterToStringStart;
+
+        let parseAppendStart = performance.now();
+
+
+        partialResult = this.parseStep(output,scopeStack,buffer,inputChars);
+
+        output = partialResult.output;
+        scopeStack = partialResult.stack;
+        buffer = partialResult.buffer;
+
+
+        let parseAppendEnd = performance.now();
+        let parseAppendTime = parseAppendEnd - parseAppendStart;
 
 
 
-
-
-
+        this.lastResult = output;
+        //return this.lastResult;
+        return {result:this.lastResult,times:{parseInsert:parseInsertTime,init:initTime,afterToString:afterToStringTime,parseAppend:parseAppendTime}};
     }
 
 
+    static split = (input, splitPos) => {
+
+        if (!input) {
+            return { beforeInsert: [], afterInsert: [] };
+        }
+
+        if (splitPos == 0) {
+            return { beforeInsert: [], afterInsert: input };
+        }
 
 
+        let totalChars = 0;
+        var lastSafe;
 
-}
+        //console.log(`input.length: ${input.length}`);
 
+        for (var i = 0; i < input.length; i++) {
 
+            const parseElement = input[i];
 
+            //console.log(parseElement);
 
+            if (parseElement.type != "controll") {
 
-
-function lex(language, string) {
-
-    const scopeStack = new Stack();
-
-    //console.log(string);
-    const inputChars = string.split("");
-
-    const output = new Array();
-
-    scopeStack.push(language.main);
-
-
-    var inputBuffer = "";
-
-    for (var i = 0; i < string.length; i++) {
-
-        let c = inputChars[i];
-        var scope = scopeStack.peek();
-        let subScopes = scope.subScopes;
-
-        let list = subScopes.map(function (scopeElement) {
-            if (lang.isRef(scopeElement)) {
-                return lang.getScopeByName(scopeElement,language);
-            } else {
-                return {...scopeElement, type : "open"};
+                totalChars += parseElement.content.length;
             }
-        }).filter(function (scopeElement) {         // gets all subScopes and also filters out undefined
-            if (scopeElement) {
-                return true;
-            } else {
-                return false;
+
+            if (totalChars > splitPos) {
+                lastSafe = i - 1;
+                break;
+            } else if (totalChars == splitPos) {
+                lastSafe = i;
+                break;
             }
+            lastSafe = i;
+        }
+
+        if (totalChars < splitPos) {
+            return {beforeInsert:input,afterInsert:[]};
+        }
+
+
+        const before = input.slice(0, lastSafe + 1);
+
+        const after = input.slice(lastSafe + 2);
+
+        if (totalChars > splitPos) {
+
+            var toDissect = { ...input[lastSafe + 1] };
+
+            var diff = toDissect.content.length - (totalChars - splitPos);
+
+            var frontContent = toDissect.content.slice(0, diff);
+            var backContent = toDissect.content.slice(diff);
+
+            var backHalf = { ...toDissect }
+            backHalf.content = backContent;
+
+            toDissect.content = frontContent;
+
+
+            before.push(toDissect)
+
+            after.unshift(backHalf);
+        } else {
+            after.unshift(input[lastSafe + 1]);
+        }
+
+        return { beforeInsert: before, afterInsert: after };
+    }
+
+    static resultToString = (result) => {
+
+        if (!result) { return "" };
+
+        const onlyContent = result.map((element) => {
+            if (element.type != "controll") {
+                return element.content;
+            }
+            return "";
         });
+        return onlyContent.join("");
+    }
 
-        let re = lang.getReserved(language,scopeStack.copy());         // all reserved strings
-        //console.log(re);
+    parseStep = (output, scopeStack, inputBuffer, inputChars) => {
+
+        
+        for (var i = 0; i < inputChars.length; i++) {
+
+            const scope = scopeStack.peek() ;
+            //console.log(scopeStack);
+            
+
+            //console.log(scope);
+
+            inputBuffer += inputChars[i];
 
 
-        for (names in re) {
+            const subScopes = scope.subScopes.map((el) => { // extracts the proper scopes
 
-            let vals = re[names].values
 
-            for (symbol in vals) {
-                list.push({type : "reserved", name : re[names].name, string : vals[symbol]});
+
+                if (lang.isRef(el)) {
+                    return lang.getScopeByName(el, this.language);
+                }
+                return el;
+            }).reduce((acc, curr) => {           // makes it a Set and filters out undefined
+                if (!curr || acc.includes(curr)) {
+                    return acc;
+                }
+                acc.push({ ...curr, type: "open" });
+                return acc;
+            }, []);
+
+
+            const list = subScopes.concat(this.language.main === scope ? [] : { ...scope, type: "close" });
+
+            const reserved = lang.getReserved(this.language, scopeStack.copy());
+            //console.log(reserved);
+
+            for (const categorie of reserved) {
+
+                let vals = categorie.values
+
+                for (const symbol in vals) {
+                    list.push({ type: "reserved", name: categorie.name, string: vals[symbol] });
+                }
+
             }
 
-        } 
-
-
-        if (scope != language.main && scope.close != undefined) {
-            list.push({...scope, type : "close"});
-        }        
-
-
-
-
-
-        inputBuffer += c;
-
-        //console.log(list);
-
-
-
-
-
-
-        let startsWithBuffer = list.filter(function (element) {      // multi character scope/reserved starting with inputbuffer
-            switch (element.type) {
-                case "open":
-                return element.open.startsWith(inputBuffer);
-
-                case "reserved":
-                return element.string.startsWith(inputBuffer);
-
-                case "close":
-                    //console.log(element);
-                return element.close.startsWith(inputBuffer);
-                default:
-                return false;
-            } 
-        })  
-
-        let startsWithOpener = list.filter(function (element) {      // does the input Buffer start with the multi character scope/reserved?
-            switch (element.type) {
-                case "open":
-                return inputBuffer.startsWith(element.open);
-
-                case "reserved":
-                return inputBuffer.startsWith(element.string);
-
-                case "close":
-                return inputBuffer.startsWith(element.close);
-                default:
-                return false;
-            } 
-        })
-
-        let both = startsWithBuffer.filter(function (element) {
-            return startsWithOpener.includes(element);
-        })
-
-
-        //console.log("scope: " + JSON.stringify(scope));
-        //console.log("list: " + JSON.stringify(list));
-        //console.log("input: " + inputBuffer);
-        //console.log("startsWithBuffer:");
-        //console.log(startsWithBuffer.length);
-        //console.log("startsWithOpener:");
-        //console.log(startsWithOpener.length);
-        //console.log("both:");
-        //console.log(both.length);
-        //console.log("\n\n");
-
-
-        if (startsWithBuffer.length == 0 && startsWithOpener == 0 && both.length == 0) {      // this means input does not start with a reversed and reversed also doesnt start with input 
-            
-            let last = output.pop();
-
-
-            if (last.type === "text" && last.stack === scopeStack) {
-                last.content = last.content + inputBuffer;
-                output.push(last);
-            } else {
-                output.push(last);
-                output.push({type : "text" ,content : inputBuffer, stack : scopeStack});
+            const startsWithBuffer = (element, string) => {
+                return element.startsWith(string);
             }
-            
-            
-            
-            inputBuffer = "";
-            
-        } else if (both.length == 1 && startsWithBuffer.length == 1) {
 
-            var res = both[0];            // TODO: differentiate between scopes and reserved chars
-            //console.log(res);
+            const startsWithElement = (element, string) => {
+                return string.startsWith(element);
+            }
 
-            switch (res.type) {
 
-                case "open":
-                    scopeStack.push(res);
-                    output.push({type : "open", content : inputBuffer, stack : scopeStack});
-                break;
-                case "close":
-                    output.push({type : "close", content : inputBuffer, stack : scopeStack});
-                    scopeStack.pop();
-                break;
-                case "reserved":
-                    output.push({type : "reserved", content : inputBuffer, stack : scopeStack});
-                break;
+
+
+
+            //console.log(list);
+
+
+            const startBuffer = list.filter((el) => {
+                switch (el.type) {
+                    case "open":
+                        return startsWithBuffer(el.open, inputBuffer);
+                    case "reserved":
+                        return startsWithBuffer(el.string, inputBuffer);
+                    case "close":
+                        return startsWithBuffer(el.close, inputBuffer);
+                }
+            });
+
+            const startElement = list.filter((el) => {
+                switch (el.type) {
+                    case "open":
+                        return startsWithElement(el.open, inputBuffer);
+                        break;
+                    case "reserved":
+                        return startsWithElement(el.string, inputBuffer);
+                        break;
+                    case "close":
+                        return startsWithElement(el.close, inputBuffer);
+                        break;
+                }
+            });
+
+            const both = startElement.filter((el) => {
+                return startBuffer.includes(el);
+            });
+
+
+            //console.log(scopeStack);
+
+
+            if (startBuffer.length == 0 && startElement == 0 && both.length == 0) {      // this means input does not start with a reversed and reversed also doesnt start with input 
+
+                let last = output.pop();
+
+                //console.log(last);
+                //console.log(last.stack, scope);
+
+
+                if (last.type === "text" && last.stack.peek() == scope) {
+                    last.content = last.content + inputBuffer;
+                    output.push(last);
+                } else {
+                    output.push(last);
+                    output.push({ type: "text", content: inputBuffer, stack: scopeStack.copy() });
+                }
+
+
+
+                inputBuffer = "";
+
+            } else if (both.length == 1 && startBuffer.length == 1) {
+
+                var res = both[0];            // TODO: differentiate between scopes and reserved chars
+                //console.log(res);
+
+                switch (res.type) {
+
+                    case "open":
+                        scopeStack.push(res);
+                        output.push({ type: "open", content: inputBuffer, stack: scopeStack.copy() });
+                        break;
+                    case "close":
+                        output.push({ type: "close", content: inputBuffer, stack: scopeStack.copy() });
+                        scopeStack.pop();
+                        break;
+                    case "reserved":
+                        output.push({ type: "reserved", content: inputBuffer, stack: scopeStack.copy() });
+                        break;
+
+                }
+
+                inputBuffer = "";
+
+            } else if (startBuffer.length == 0 && startElement.length > 0) {
+
+                var res = startElement[0];
+                //console.log(res);     // this part is only for opening scopes rn
+
+                switch (res.type) {
+                    case "open":
+                        var resChar = inputBuffer.slice(0, res.open.length);
+                        var rest = inputBuffer.slice(res.open.length);
+                        scopeStack.push(res);
+                        output.push({ type: "open", content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        break;
+                    case "close":
+                        var resChar = inputBuffer.slice(0, res.open.length);
+                        var rest = inputBuffer.slice(res.open.length);
+                        output.push({ type: "close", content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        scopeStack.pop();
+                        break;
+                    case "reserved":
+                        var resChar = inputBuffer.slice(0, res.open.length);
+                        var rest = inputBuffer.slice(res.open.length);
+                        output.push({ type: "reversed", content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        break;
+                }
+
+                inputBuffer = "";
                 
             }
-            
-            inputBuffer = "";
-            
-        } else if (startsWithBuffer.length == 0 && startsWithOpener.length > 0) {
 
-            var res = startsWithOpener[0]; 
-            //console.log(res);     // this part is only for opening scopes rn
-
-            switch (res.type) {
-                case "open":
-                    var resChar = inputBuffer.slice(0,res.open.length);
-                    var rest = inputBuffer.slice(res.open.length);
-                    scopeStack.push(res);
-                    output.push({type : "open", content : resChar, stack : scopeStack});
-                    output.push({type : "text", content : rest, stack : scopeStack});
-                break;
-                case "close":
-                    var resChar = inputBuffer.slice(0,res.open.length);
-                    var rest = inputBuffer.slice(res.open.length);
-                    output.push({type : "close", content : resChar, stack : scopeStack});
-                    output.push({type : "text", content : rest, stack : scopeStack});
-                    scopeStack.pop();
-                break;
-                case "reserved":
-                    var resChar = inputBuffer.slice(0,res.open.length);
-                    var rest = inputBuffer.slice(res.open.length);
-                    output.push({type : "reversed", content : resChar, stack : scopeStack});
-                    output.push({type : "text", content : rest, stack : scopeStack});
-                break;
-            }
             
-            inputBuffer = "";
         }
-        //console.log("stack size after :" + scopeStack.size());
-        //console.log("top scope on stack: " + JSON.stringify(scopeStack.peek()));
+
+        return { output: output, buffer: inputBuffer, stack: scopeStack };
+
     }
 
-    return output
+
 }
 
-module.exports = {read, write, lex}
+
+
+
+
+
+
+module.exports = { read, write }
 
 
 
 
 //console.log("html.json");
+let lexer = new Lexer(JSON.parse(read("public/parser/html.json")));
 
-let startTime = performance.now();
 
-console.log(path.resolve("public/parser/html.json"));
+let res = lexer.lex({ selectionStart: 0, selectionEnd: 0 }, { type: "paste", content: read("public/editor/editor.html") });
 
-eee = lex(JSON.parse(read("public/parser/html.json")),read("public/editor/editor.html"))
+console.log(res.times);
 
-let endTime = performance.now();
 
+
+res = lexer.lex({selectionStart:94,selectionEnd:94}, {type:"paste",content: "<e>"});
+
+
+console.log(res.times);
+
+
+eee = Lexer.split(res.result,98).beforeInsert;
 
 console.log(eee);
 
-console.log(`time needed: ${endTime-startTime} ms`);
-
-
-
-
+//console.log(res.result.map((el) => {return el.stack.toArray().length}));
