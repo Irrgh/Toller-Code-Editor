@@ -9,7 +9,7 @@
         {"name" : "multiline-comment", "subScopes" : [], "open" : "/*", "close" : "*/"},
         {"name" : "string", "subScopes" : [], "open" : "\"", "close" : "\""}
         ],
-    "reversed" : [
+    "reserved" : [
         {"name" : "arith-op", "values" : ["+","*","-","/","=","<",">"]},
         {"name" : "bool-op", "values" : ["!","&&","||"]}
         ]}

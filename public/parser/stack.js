@@ -53,7 +53,7 @@ class Stack {
 
 
 
-module.exports = Stack;
+export {Stack};
 
 
 //test = new Stack();

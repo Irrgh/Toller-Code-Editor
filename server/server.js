@@ -22,6 +22,7 @@ const app = https.createServer(sslOptions, server);
 
 
 server.use(bodyParser.urlencoded({ extended: false }));
+server.use(bodyParser.json());
 
 
 server.use(cookieparser());
@@ -84,10 +85,6 @@ server.get("/editor", (req, res) => {
 
     
     res.sendFile(path.resolve("public/editor/editor.html"));
-    
-
-
-
 });
 
 
@@ -160,11 +157,40 @@ server.post("/process-register", (req,res) => {
 
 
 
+server.post("/highlight", (req,res) => {
+
+    console.log(req.body);
+
+    const type = req.body.type;
+    
+    switch (type) {
+        case ".js":
+            res.sendFile(path.resolve("public/parser/java.json"));
+            break;
+        case ".java":
+            res.sendFile(path.resolve("public/parser/java.json"));
+            break;
+        case ".html":
+            res.sendFile(path.resolve("public/parser/html.json"));
+            break;
+        default:
+            res.status(404).json({error:`no parser for ${type}`});
+            break;
+    }
 
 
 
 
-server.get("/workspaces", (req, res) => {
+
+
+
+
+
+});
+
+
+
+server.post("/workspaces", (req, res) => {
 
 
     console.log(req.cookies);

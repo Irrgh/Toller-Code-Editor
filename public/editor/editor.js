@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "../util/userFile.js";
 import { Database } from "../util/database.js";
-
+import {Lexer} from "../parser/lexer.js";
 
 
 export { Editor };
@@ -21,6 +21,10 @@ class Editor {
     openDir;
     files;
     selected;
+
+    lexer;
+    local;
+
 
     menuBars;
     db;
@@ -48,7 +52,8 @@ class Editor {
 
         this.menuBars = document.querySelectorAll(".menu-bar-horizontal");
 
-
+        this.local = true;
+        this.lexer = undefined;
         this.db = this.initDB();
 
 
@@ -349,6 +354,7 @@ class Editor {
             const image = await readFile(fileHandle);
 
             this.fileDisplay.innerHTML = "";
+            this.fileDisplay.setAttribute("contenteditable","false");
 
             const imageElement = new Image();
             imageElement.src = URL.createObjectURL(file);
@@ -361,14 +367,36 @@ class Editor {
 
             this.fileDisplay.append(imageContainer);
 
-
-
-
-
-
         } else {
 
+            this.fileDisplay.setAttribute("contenteditable","true");
             const text = await readFile(fileHandle);
+
+            const ending = file.name.slice(file.name.indexOf("."))
+
+            const options = {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify({type:ending})
+            }
+
+
+            const response = await fetch("/highlight",options);
+
+            if (response.ok) {
+
+                const json = await response.json();
+
+
+                this.lexer = new Lexer(json);
+            
+                const sel = {selectionStart:0,selectionEnd:0};
+                const action = {type:"paste",content:text};
+
+                console.log(this.lexer.lex(sel,action));
+            }
+
+
 
             const newContent = Editor.stringToLineFragment(text);
 
@@ -378,7 +406,7 @@ class Editor {
 
         }
 
-
+        console.log(fileType);
         console.log(fileHandle);
 
 
@@ -765,7 +793,7 @@ class Editor {
 
 
         var request = new XMLHttpRequest();
-        request.open("GET", "/workspaces", true);
+        request.open("POST", "/workspaces", true);
         request.onload = function () {
             console.log(request.responseText);
         }

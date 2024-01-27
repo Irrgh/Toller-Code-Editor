@@ -1,17 +1,7 @@
-const fs = require("fs");
-const Stack = require("./stack.js");
-const lang = require("./language.js");
-const path = require("path");
 
+import { Stack } from "./stack.js";
+import { Language } from "./language.js";
 
-function write(data, path) {
-    return fs.writeFileSync(path, data);
-}
-
-
-function read(path) {
-    return fs.readFileSync(path, { encoding: 'utf8', flag: 'r' });
-}
 
 
 class Lexer {
@@ -25,9 +15,6 @@ class Lexer {
     constructor(language) {
         this.language = language;
     }
-
-
-
 
 
     lex = (selection, action) => {
@@ -126,19 +113,19 @@ class Lexer {
         // Initiation over
 
         //console.log(`init (split) took ${initEnd-initStart}ms`);
-        
+
 
         let parseInsertStart = performance.now();
 
         var buffer = "";
 
 
-        let partialResult = this.parseStep(output,scopeStack,buffer,inputChars);
-        
+        let partialResult = this.parseStep(output, scopeStack, buffer, inputChars);
+
         output = partialResult.output;
         scopeStack = partialResult.stack;
         buffer = partialResult.buffer;
-        
+
 
         let parseInsertEnd = performance.now();
 
@@ -150,27 +137,27 @@ class Lexer {
 
         if (output.length !== 0 && after.length !== 0) {                                             // inserted input did not change the scopeStack!
             if (output[output.length - 1].stack == after[0].stack) {
-                
-                
+
+
                 this.lastResult = output.concat(after);
 
                 //console.log(`efficient combine took ${combineEnd-combineStart}ms`);
-                return {result:this.lastResult,times:{parseInsert:parseInsertTime,init:initTime}};
+                return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime } };
             }
         }
 
 
         let afterToStringStart = performance.now();
-
         inputChars = Lexer.resultToString(after).split("");
-
         let afterToStringEnd = performance.now();
         let afterToStringTime = afterToStringEnd - afterToStringStart;
+
+
 
         let parseAppendStart = performance.now();
 
 
-        partialResult = this.parseStep(output,scopeStack,buffer,inputChars);
+        partialResult = this.parseStep(output, scopeStack, buffer, inputChars);
 
         output = partialResult.output;
         scopeStack = partialResult.stack;
@@ -184,7 +171,7 @@ class Lexer {
 
         this.lastResult = output;
         //return this.lastResult;
-        return {result:this.lastResult,times:{parseInsert:parseInsertTime,init:initTime,afterToString:afterToStringTime,parseAppend:parseAppendTime}};
+        return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime, afterToString: afterToStringTime, parseAppend: parseAppendTime } };
     }
 
 
@@ -226,7 +213,7 @@ class Lexer {
         }
 
         if (totalChars < splitPos) {
-            return {beforeInsert:input,afterInsert:[]};
+            return { beforeInsert: input, afterInsert: [] };
         }
 
 
@@ -274,12 +261,15 @@ class Lexer {
 
     parseStep = (output, scopeStack, inputBuffer, inputChars) => {
 
-        
+        const controll = [{type:"controll",name:"CR",string:"\r"},{type:"controll",name:"NL",string:"\n"}];
+
+
+
         for (var i = 0; i < inputChars.length; i++) {
 
-            const scope = scopeStack.peek() ;
+            const scope = scopeStack.peek();
             //console.log(scopeStack);
-            
+
 
             //console.log(scope);
 
@@ -288,24 +278,28 @@ class Lexer {
 
             const subScopes = scope.subScopes.map((el) => { // extracts the proper scopes
 
-
-
-                if (lang.isRef(el)) {
-                    return lang.getScopeByName(el, this.language);
+                if (Language.isRef(el)) {
+                    return Language.getScopeByName(el, this.language);
                 }
                 return el;
             }).reduce((acc, curr) => {           // makes it a Set and filters out undefined
-                if (!curr || acc.includes(curr)) {
-                    return acc;
+
+                if (!curr) {
+
+                } else if (Array.isArray(curr)) {
+                    curr.forEach((el) => {
+                        if (!acc.includes(el)) { acc.push({ ...el, type: "open" }) };
+                    })
+                } else {
+
+                    acc.push({ ...curr, type: "open" });
                 }
-                acc.push({ ...curr, type: "open" });
                 return acc;
             }, []);
 
+            const list = subScopes.concat((this.language.main === scope ? [] : { ...scope, type: "close" }),controll);
 
-            const list = subScopes.concat(this.language.main === scope ? [] : { ...scope, type: "close" });
-
-            const reserved = lang.getReserved(this.language, scopeStack.copy());
+            const reserved = Language.getReserved(this.language, scopeStack.copy());
             //console.log(reserved);
 
             for (const categorie of reserved) {
@@ -341,6 +335,8 @@ class Lexer {
                         return startsWithBuffer(el.string, inputBuffer);
                     case "close":
                         return startsWithBuffer(el.close, inputBuffer);
+                    case "controll":
+                        return startsWithBuffer(el.string, inputBuffer);
                 }
             });
 
@@ -348,13 +344,12 @@ class Lexer {
                 switch (el.type) {
                     case "open":
                         return startsWithElement(el.open, inputBuffer);
-                        break;
                     case "reserved":
                         return startsWithElement(el.string, inputBuffer);
-                        break;
                     case "close":
                         return startsWithElement(el.close, inputBuffer);
-                        break;
+                    case "controll":
+                        return startsWithElement(el.string,inputBuffer);
                 }
             });
 
@@ -362,8 +357,7 @@ class Lexer {
                 return startBuffer.includes(el);
             });
 
-
-            //console.log(scopeStack);
+            //console.log(list);
 
 
             if (startBuffer.length == 0 && startElement == 0 && both.length == 0) {      // this means input does not start with a reversed and reversed also doesnt start with input 
@@ -373,14 +367,21 @@ class Lexer {
                 //console.log(last);
                 //console.log(last.stack, scope);
 
+                if (last) {
 
-                if (last.type === "text" && last.stack.peek() == scope) {
-                    last.content = last.content + inputBuffer;
-                    output.push(last);
+                    if (last.type === "text" && last.stack.peek() == scope) {
+                        last.content = last.content + inputBuffer;
+                        output.push(last);
+                    } else {
+                        output.push(last);
+                        output.push({ type: "text", content: inputBuffer, stack: scopeStack.copy() });
+                    }
+
                 } else {
-                    output.push(last);
                     output.push({ type: "text", content: inputBuffer, stack: scopeStack.copy() });
                 }
+
+
 
 
 
@@ -395,14 +396,17 @@ class Lexer {
 
                     case "open":
                         scopeStack.push(res);
-                        output.push({ type: "open", content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "open", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
                         break;
                     case "close":
-                        output.push({ type: "close", content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "close", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
                         scopeStack.pop();
                         break;
                     case "reserved":
-                        output.push({ type: "reserved", content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "reserved", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
+                        break;
+                    case "controll":
+                        output.push({type:"controll", name: res.name, content: inputBuffer, stack: scopeStack.copy()});
                         break;
 
                 }
@@ -419,29 +423,35 @@ class Lexer {
                         var resChar = inputBuffer.slice(0, res.open.length);
                         var rest = inputBuffer.slice(res.open.length);
                         scopeStack.push(res);
-                        output.push({ type: "open", content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "open", name: res.name, content: resChar, stack: scopeStack.copy() });
                         output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         break;
                     case "close":
-                        var resChar = inputBuffer.slice(0, res.open.length);
-                        var rest = inputBuffer.slice(res.open.length);
-                        output.push({ type: "close", content: resChar, stack: scopeStack.copy() });
+                        var resChar = inputBuffer.slice(0, res.close.length);
+                        var rest = inputBuffer.slice(res.close.length);
+                        output.push({ type: "close", name: res.name, content: resChar, stack: scopeStack.copy() });
                         output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         scopeStack.pop();
                         break;
                     case "reserved":
-                        var resChar = inputBuffer.slice(0, res.open.length);
-                        var rest = inputBuffer.slice(res.open.length);
-                        output.push({ type: "reversed", content: resChar, stack: scopeStack.copy() });
+                        var resChar = inputBuffer.slice(0, res.string.length);
+                        var rest = inputBuffer.slice(res.string.length);
+                        output.push({ type: "reversed", name: res.name, content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        break;
+                    case "controll":
+                        var resChar = inputBuffer.slice(0, res.string.length);
+                        var rest = inputBuffer.slice(res.string.length);
+                        output.push({type:"controll", name: res.name, content: resChar, stack: scopeStack.copy()});
                         output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         break;
                 }
 
                 inputBuffer = "";
-                
+
             }
 
-            
+
         }
 
         return { output: output, buffer: inputBuffer, stack: scopeStack };
@@ -457,10 +467,10 @@ class Lexer {
 
 
 
-module.exports = { read, write }
+export { Lexer };
 
 
-
+/*
 
 //console.log("html.json");
 let lexer = new Lexer(JSON.parse(read("public/parser/html.json")));
@@ -483,3 +493,5 @@ eee = Lexer.split(res.result,98).beforeInsert;
 console.log(eee);
 
 //console.log(res.result.map((el) => {return el.stack.toArray().length}));
+
+*/
