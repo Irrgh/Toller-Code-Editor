@@ -393,12 +393,14 @@ class Editor {
                 const sel = {selectionStart:0,selectionEnd:0};
                 const action = {type:"paste",content:text};
 
-                console.log(this.lexer.lex(sel,action));
+
+                var res = this.lexer.lex(sel,action);
+                console.log(res);
             }
 
 
 
-            const newContent = Editor.stringToLineFragment(text);
+            const newContent = Lexer.toHtml(res.result);
 
             this.fileDisplay.innerHTML = "";
 

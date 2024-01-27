@@ -49,6 +49,14 @@ class Stack {
         return stackCopy;
     }
 
+    static fromArray (stack) {
+
+        const s = new Stack();
+        s.items = [...stack];
+
+        return s;
+    }
+
 }
 
 
