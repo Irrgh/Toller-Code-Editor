@@ -297,7 +297,7 @@ class Lexer {
                 return acc;
             }, []);
 
-            const list = subScopes.concat((this.language.main === scope ? [] : { ...scope, type: "close" }),controll);
+            const list = subScopes.concat((this.language.main === scope ? [] : { ...scope, type: "close" }), controll);
 
             const reserved = Language.getReserved(this.language, scopeStack.copy());
             //console.log(reserved);
@@ -388,7 +388,7 @@ class Lexer {
 
 
 
-                
+
 
 
                 inputBuffer = "";
@@ -424,7 +424,7 @@ class Lexer {
                 var res = startElement[0];
                 //console.log(res);     // this part is only for opening scopes rn
 
-                
+
 
 
                 switch (res.type) {
@@ -444,7 +444,7 @@ class Lexer {
                         var resChar = inputBuffer.slice(0, res.close.length);
                         var rest = inputBuffer.slice(res.close.length);
                         output.push({ type: "close", name: res.name, content: resChar, stack: scopeStack.copy() });
-                        
+
                         if (rest.length > 1) {
                             output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         }
@@ -455,7 +455,7 @@ class Lexer {
                         var resChar = inputBuffer.slice(0, res.string.length);
                         var rest = inputBuffer.slice(res.string.length);
                         output.push({ type: "reversed", name: res.name, content: resChar, stack: scopeStack.copy() });
-                        
+
                         if (rest.length > 1) {
                             output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         }
@@ -465,7 +465,7 @@ class Lexer {
                         var resChar = inputBuffer.slice(0, res.string.length);
                         var rest = inputBuffer.slice(res.string.length);
                         output.push({ type: "controll", name: res.name, content: resChar, stack: scopeStack.copy() });
-                        
+
                         if (rest.length > 1) {
                             output.push({ type: "text", content: rest, stack: scopeStack.copy() });
                         }
@@ -475,7 +475,7 @@ class Lexer {
 
                 startElement.forEach((el) => {
                     if (el.type == "controll" && el != res) {
-                        output.push({type:"controll",name : el.name, content: resChar, stack: scopeStack.copy()})
+                        output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() })
                     }
                 });
 
@@ -495,7 +495,9 @@ class Lexer {
     static toHtml = (result) => {
 
         const localDepth = (segment) => {
-            return segment.stack.toArray().filter((el) => { segment.name == el.name }).length - 1;
+            return segment.stack.toArray().filter((el) => {
+                return segment.name == el.name
+            }).length - 1;
         }
 
         const globalDepth = (segment) => {
@@ -510,6 +512,13 @@ class Lexer {
 
         let spanStack = new Stack();
 
+        let init = document.createElement("span");
+        init.append(document.createTextNode(result[0].content));
+        init.setAttribute("local-depth", `${localDepth(result[0])}`);
+        init.setAttribute("global-depth", `${globalDepth(result[0])}`);
+
+        spanStack.push(init);
+
         for (let i = 0; i < result.length; i++) {
 
             let iter = result[i];
@@ -522,27 +531,31 @@ class Lexer {
                     span.setAttribute("local-depth", `${localDepth(iter)}`);
                     span.setAttribute("global-depth", `${globalDepth(iter)}`);
                     span.classList.add(iter.name);
-                    
+
                     let parent = spanStack.peek();
 
-                    (parent != null) ? parent.append(span) : currentLine.append(span);
-                    
+                    (parent != null) ? parent.append(span) : console.log("why open");
+
                     spanStack.push(span);
                     break;
                 }
                 case "close": {
                     let span = document.createElement("span");
-                    span.append(document.createTextNode(iter.content));
+
+                    if (iter.content !== "\n") {
+                        span.append(document.createTextNode(iter.content));
+                    }
+                    
                     span.setAttribute("local-depth", `${localDepth(iter)}`);
                     span.setAttribute("global-depth", `${globalDepth(iter)}`);
                     span.classList.add(iter.name);
 
-                    spanStack.pop();
+
                     let parent = spanStack.peek();
 
-                    (parent != null) ? parent.append(span) : currentLine.append(span);
+                    (parent != null) ? parent.append(span) : console.log("why close");
+                    spanStack.pop();
 
-                    
                     break;
                 }
                 case "text": {
@@ -553,7 +566,7 @@ class Lexer {
 
                     let parent = spanStack.peek();
 
-                    (parent != null) ? parent.append(span) : currentLine.append(span);
+                    (parent != null) ? parent.append(span) : console.log("why text");
 
                     break;
                 }
@@ -583,20 +596,33 @@ class Lexer {
                             currentLine = document.createElement("div");
                             currentLine.classList.add("line");
 
-                            let temp = spanStack.toArray().map((el) => {
-                                let copy = el.cloneNode();
-                                copy.innerHTML = "";
-                                currentLine.append(copy);
-                                return copy;
-                            });
-                            spanStack = Stack.fromArray(temp);
-                                break;
+                            console.log(spanStack);
+
+                            let temp = spanStack.toArray().reduce((acc,curr) => {
+                                
+                                let last = acc.peek();
+                                let copy = curr.cloneNode();
+
+                                if (!last) {
+
+                                    currentLine.append(copy);
+                                } else {
+
+                                    last.append(copy);
+                                }
+
+                                acc.push(copy);
+                                
+                                return acc;
+                            },new Stack());
+                            spanStack = temp;
+                            break;
                     }
                     break;
                 }
             }
 
-
+            console.log(spanStack);
         }
 
         return fragment;
