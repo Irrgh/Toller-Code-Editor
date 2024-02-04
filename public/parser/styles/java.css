@@ -1,0 +1,29 @@
+.plain {
+    color: rgb(93, 232, 232);
+}
+
+.curly-bracket {
+    color: rgb(248, 104, 209)
+}
+
+.normal-bracket {
+    color: rgb(217, 231, 63);
+}
+
+.rect-bracket {
+    color: greenyellow;
+}
+
+.assignment {
+    color: red;
+}
+
+.string,
+.string .plain {
+    color: rgb(183, 126, 65);
+}
+
+.inline-comment,
+.inline-comment .plain {
+    color: green;
+}

@@ -1,0 +1,20 @@
+
+.plain {
+    color : rgb(216, 210, 210);
+}
+
+.tag {
+    color : rgb(0, 153, 255)
+}
+
+.tag .plain {
+    color : lightblue;
+}
+
+.tag .string, .string .plain {
+    color :rgb(197, 92, 69);
+}
+
+.assignment {
+    color : rgb(177, 42, 42);
+}

@@ -19,6 +19,7 @@ body {
     background-color: rgb(36, 36, 36);
     color: whitesmoke;
     tab-size: 4;
+    caret-color: white;
 }
 
 
@@ -34,6 +35,10 @@ body {
     margin: 0;
     counter-increment: linenumber;
 }
+
+
+
+
 
 
 .editor div.line:hover::before {

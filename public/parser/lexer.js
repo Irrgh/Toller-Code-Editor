@@ -395,97 +395,148 @@ class Lexer {
 
             } else if (both.length == 1 && startBuffer.length == 1) {
 
-                var res = both[0];            // TODO: differentiate between scopes and reserved chars
+                var el = both[0];            // TODO: differentiate between scopes and reserved chars
                 //console.log(res);
 
-                switch (res.type) {
+                switch (el.type) {
 
                     case "open":
-                        scopeStack.push(res);
-                        output.push({ type: "open", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
+                        scopeStack.push(el);
+                        output.push({ type: "open", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
                         break;
                     case "close":
-                        output.push({ type: "close", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "close", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
                         scopeStack.pop();
                         break;
                     case "reserved":
-                        output.push({ type: "reserved", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "reserved", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
                         break;
                     case "controll":
-                        output.push({ type: "controll", name: res.name, content: inputBuffer, stack: scopeStack.copy() });
+                        output.push({ type: "controll", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
                         break;
 
                 }
+
+
+
+
 
                 inputBuffer = "";
-
-            } else if (startBuffer.length == 0 && startElement.length > 0) {
-
-                var res = startElement[0];
-                //console.log(res);     // this part is only for opening scopes rn
+            } else if (both.length > 1 && startBuffer.length > 1 && startElement.length > 1) {
 
 
 
+                let onlyControllRead = true;
 
-                switch (res.type) {
-                    case "open":
-                        var resChar = inputBuffer.slice(0, res.open.length);
-                        var rest = inputBuffer.slice(res.open.length);
-                        scopeStack.push(res);
+                for (let i = 0; i < both.length; i++) {
 
-                        output.push({ type: "open", name: res.name, content: resChar, stack: scopeStack.copy() });
+                    let el = both[i];
 
-                        if (rest.length > 1) {
-                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                        }
+                    switch (el.type) {
 
-                        break;
-                    case "close":
-                        var resChar = inputBuffer.slice(0, res.close.length);
-                        var rest = inputBuffer.slice(res.close.length);
-                        output.push({ type: "close", name: res.name, content: resChar, stack: scopeStack.copy() });
+                        case "open":
+                            if (onlyControllRead) {
+                                scopeStack.push(el);
+                                output.push({ type: "open", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
+                                onlyControllRead = false;
+                            }
+                            break;
+                        case "close":
+                            if (onlyControllRead) {
+                                output.push({ type: "close", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
+                                scopeStack.pop();
+                                onlyControllRead = false;
+                            }
+                            break;
+                        case "reserved":
+                            if (onlyControllRead) {
+                                output.push({ type: "reserved", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
+                                onlyControllRead = false;
+                            }
+                            break;
+                        case "controll":
+                            output.push({ type: "controll", name: el.name, content: inputBuffer, stack: scopeStack.copy() });
+                            break;
 
-                        if (rest.length > 1) {
-                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                        }
-
-                        scopeStack.pop();
-                        break;
-                    case "reserved":
-                        var resChar = inputBuffer.slice(0, res.string.length);
-                        var rest = inputBuffer.slice(res.string.length);
-                        output.push({ type: "reversed", name: res.name, content: resChar, stack: scopeStack.copy() });
-
-                        if (rest.length > 1) {
-                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                        }
-
-                        break;
-                    case "controll":
-                        var resChar = inputBuffer.slice(0, res.string.length);
-                        var rest = inputBuffer.slice(res.string.length);
-                        output.push({ type: "controll", name: res.name, content: resChar, stack: scopeStack.copy() });
-
-                        if (rest.length > 1) {
-                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                        }
-
-                        break;
-                }
-
-                startElement.forEach((el) => {
-                    if (el.type == "controll" && el != res) {
-                        output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() })
                     }
-                });
 
+                }
 
+                //console.log(inputBuffer,both.length,startBuffer.length,startElement.length,output.length);
                 inputBuffer = "";
 
+        } else if (startBuffer.length == 0 && startElement.length > 0) {
+
+            var el = startElement[0];
+            //console.log(res);     // this part is only for opening scopes rn
+
+
+
+
+            switch (el.type) {
+                case "open":
+                    var resChar = inputBuffer.slice(0, el.open.length);
+                    var rest = inputBuffer.slice(el.open.length);
+                    scopeStack.push(el);
+
+                    output.push({ type: "open", name: el.name, content: resChar, stack: scopeStack.copy() });
+
+                    if (rest.length > 0) {
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                    }
+
+                    break;
+                case "close":
+                    var resChar = inputBuffer.slice(0, el.close.length);
+                    var rest = inputBuffer.slice(el.close.length);
+                    output.push({ type: "close", name: el.name, content: resChar, stack: scopeStack.copy() });
+
+                    if (rest.length > 0) {
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                    }
+
+                    scopeStack.pop();
+                    break;
+                case "reserved":
+                    var resChar = inputBuffer.slice(0, el.string.length);
+                    var rest = inputBuffer.slice(el.string.length);
+                    output.push({ type: "reversed", name: el.name, content: resChar, stack: scopeStack.copy() });
+
+                    if (rest.length > 0) {
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                    }
+
+                    break;
+                case "controll":
+                    var resChar = inputBuffer.slice(0, el.string.length);
+                    var rest = inputBuffer.slice(el.string.length);
+                    output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() });
+
+                    if (rest.length > 0) {
+                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                    }
+
+                    break;
             }
 
+            console.log(startElement, inputBuffer, i);
+
+
+
+            startElement.forEach((el) => {
+                if (el.type == "controll" && el != el) {
+                    //console.log(el.name);
+                    //output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() })
+                }
+            });
+
+
+            inputBuffer = "";
 
         }
+
+
+    }
 
         return { output: output, buffer: inputBuffer, stack: scopeStack };
 
@@ -494,139 +545,152 @@ class Lexer {
 
     static toHtml = (result) => {
 
-        const localDepth = (segment) => {
-            return segment.stack.toArray().filter((el) => {
-                return segment.name == el.name
-            }).length - 1;
-        }
+    const localDepth = (segment) => {
+        return segment.stack.toArray().filter((el) => {
+            return segment.name == el.name
+        }).length - 1;
+    }
 
-        const globalDepth = (segment) => {
-            return segment.stack.size() - 1;
-        }
+    const globalDepth = (segment) => {
+        return segment.stack.size() - 1;
+    }
 
 
-        const fragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
 
-        let currentLine = document.createElement("div");
-        currentLine.classList.add("line");
+    let currentLine = document.createElement("div");
+    currentLine.classList.add("line");
 
-        let spanStack = new Stack();
+    let spanStack = new Stack();
 
-        let init = document.createElement("span");
-        init.append(document.createTextNode(result[0].content));
-        init.setAttribute("local-depth", `${localDepth(result[0])}`);
-        init.setAttribute("global-depth", `${globalDepth(result[0])}`);
+    let init = document.createElement("span");
+    init.append(document.createTextNode(result[0].content));
+    init.setAttribute("local-depth", `${localDepth(result[0])}`);
+    init.setAttribute("global-depth", `${globalDepth(result[0])}`);
 
-        spanStack.push(init);
+    spanStack.push(init);
 
-        for (let i = 0; i < result.length; i++) {
+    for (let i = 0; i < result.length; i++) {
 
-            let iter = result[i];
+        let iter = result[i];
 
-            switch (iter.type) {
+        switch (iter.type) {
 
-                case "open": {
-                    let span = document.createElement("span");
+            case "open": {
+                let span = document.createElement("span");
+                span.append(document.createTextNode(iter.content));
+                span.style.setProperty("--local-depth", localDepth(iter));
+                span.style.setProperty("--global-depth", globalDepth(iter));
+                span.classList.add(iter.name);
+
+                let parent = spanStack.peek();
+
+                (parent != null) ? parent.append(span) : console.log("why open");
+
+                spanStack.push(span);
+                break;
+            }
+            case "close": {
+                let span = document.createElement("span");
+
+
+                if (!iter.content.includes("\n")) {
                     span.append(document.createTextNode(iter.content));
-                    span.setAttribute("local-depth", `${localDepth(iter)}`);
-                    span.setAttribute("global-depth", `${globalDepth(iter)}`);
-                    span.classList.add(iter.name);
-
-                    let parent = spanStack.peek();
-
-                    (parent != null) ? parent.append(span) : console.log("why open");
-
-                    spanStack.push(span);
-                    break;
                 }
-                case "close": {
-                    let span = document.createElement("span");
 
-                    if (iter.content !== "\n") {
-                        span.append(document.createTextNode(iter.content));
-                    }
-                    
-                    span.setAttribute("local-depth", `${localDepth(iter)}`);
-                    span.setAttribute("global-depth", `${globalDepth(iter)}`);
-                    span.classList.add(iter.name);
+                span.style.setProperty("--local-depth", localDepth(iter));
+                span.style.setProperty("--global-depth", globalDepth(iter));
+                span.classList.add(iter.name);
 
 
-                    let parent = spanStack.peek();
+                let parent = spanStack.peek();
 
-                    (parent != null) ? parent.append(span) : console.log("why close");
-                    spanStack.pop();
+                (parent != null) ? parent.append(span) : console.log("why close");
+                spanStack.pop();
 
-                    break;
-                }
-                case "text": {
-                    let span = document.createElement("span");
-                    span.innerText = iter.content;
-                    span.setAttribute("global-depth", `${globalDepth(iter)}`);
-                    span.classList.add("plain");
+                break;
+            }
+            case "text": {
+                let span = document.createElement("span");
+                span.innerText = iter.content;
+                span.style.setProperty("--global-depth", globalDepth(iter));
 
-                    let parent = spanStack.peek();
 
-                    (parent != null) ? parent.append(span) : console.log("why text");
-
-                    break;
-                }
-                case "reserved": {
-                    let span = document.createElement("span");
-                    span.innerText = iter.content;
-                    span.setAttribute("global-depth", `${globalDepth(iter)}`);
-                    span.classList.add(`${iter.name}`);
-
-                    let parent = spanStack.peek();
-
-                    (parent != null) ? parent.append(span) : currentLine.append(span);
-
-                    break;
+                if (iter.content.includes("\n") || iter.content == "") {
+                    console.log(iter.content);
                 }
 
 
-                case "controll": {
-                    switch (iter.name) {
-                        case "CR":
-                            let br = document.createElement("br");
-                            currentLine.append(br);
-                            break;
-                        case "NL":
-                            fragment.append(currentLine);
 
-                            currentLine = document.createElement("div");
-                            currentLine.classList.add("line");
+                span.classList.add("plain");
 
-                            console.log(spanStack);
+                let parent = spanStack.peek();
 
-                            let temp = spanStack.toArray().reduce((acc,curr) => {
-                                
-                                let last = acc.peek();
-                                let copy = curr.cloneNode();
+                (parent != null) ? parent.append(span) : console.log("why text");
 
-                                if (!last) {
+                break;
+            }
+            case "reserved": {
+                let span = document.createElement("span");
+                span.innerText = iter.content;
+                span.style.setProperty("--global-depth", globalDepth(iter));
+                span.classList.add(`${iter.name}`);
 
-                                    currentLine.append(copy);
-                                } else {
+                let parent = spanStack.peek();
 
-                                    last.append(copy);
-                                }
+                (parent != null) ? parent.append(span) : currentLine.append(span);
 
-                                acc.push(copy);
-                                
-                                return acc;
-                            },new Stack());
-                            spanStack = temp;
-                            break;
-                    }
-                    break;
-                }
+                break;
             }
 
-            console.log(spanStack);
+
+            case "controll": {
+                switch (iter.name) {
+                    case "CR":
+                        let br = document.createElement("br");
+                        currentLine.append(br);
+
+
+
+
+
+                        break;
+                    case "NL":
+                        fragment.append(currentLine);
+
+                        currentLine = document.createElement("div");
+                        currentLine.classList.add("line");
+
+                        //console.log(spanStack);
+
+                        let temp = spanStack.toArray().reduce((acc, curr) => {
+
+                            let last = acc.peek();
+                            let copy = curr.cloneNode();
+
+                            if (!last) {
+
+                                currentLine.append(copy);
+                            } else {
+
+                                last.append(copy);
+                            }
+
+                            acc.push(copy);
+
+                            return acc;
+                        }, new Stack());
+                        spanStack = temp;
+                        break;
+                }
+                break;
+            }
         }
 
-        return fragment;
-    };
+    }
+
+    return fragment;
+};
 
 
 }

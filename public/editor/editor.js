@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "../util/userFile.js";
 import { Database } from "../util/database.js";
-import {Lexer} from "../parser/lexer.js";
+import { Lexer } from "../parser/lexer.js";
 
 
 export { Editor };
@@ -45,21 +45,23 @@ class Editor {
         this.openFolder = this.fileManager.querySelector("#open-folder");
         this.shareFolder = this.fileManager.querySelector("#share-folder");
         // this.files = this.fileManager.querySelector(".files");
-        this.openDir = undefined;
+
 
         this.openFolder.addEventListener("click", this.handleDirectorySelect);
         this.shareFolder.addEventListener("click", this.handleShareFolder);
 
         this.menuBars = document.querySelectorAll(".menu-bar-horizontal");
 
+
         this.local = true;
+        this.openDir = undefined;
         this.lexer = undefined;
         this.db = this.initDB();
 
 
 
         this.addInvisibleScrollForMenuBars();
-        this.addNothingSelectedOptions();
+        this.initalFileOpenOptions();
 
 
         console.log(this);
@@ -110,7 +112,7 @@ class Editor {
         });
     }
 
-    addNothingSelectedOptions = () => {
+    initalFileOpenOptions = () => {
 
         const nothing = document.querySelector(".nothing-selected");
 
@@ -135,8 +137,8 @@ class Editor {
         }
 
 
-        any.addEventListener("click", async(event) => {
-            
+        any.addEventListener("click", async (event) => {
+
 
             const res = await this.handleDirectorySelect();
 
@@ -173,13 +175,13 @@ class Editor {
                     const perm = await stored.fileHandle.requestPermission({ mode: "readwrite" });
 
 
-                    if(perm === "granted") {
+                    if (perm === "granted") {
                         this.openDir = stored.fileHandle;
 
-                    common();    
-                    this.redraw();
+                        common();
+                        this.redraw();
                     }
-                    
+
                 })
 
                 links.append(link);
@@ -341,6 +343,12 @@ class Editor {
         sel.addRange(range);
     }
 
+
+
+
+
+
+
     loadContent = async (fileHandle) => {
 
         const file = await fileHandle.getFile()
@@ -354,7 +362,7 @@ class Editor {
             const image = await readFile(fileHandle);
 
             this.fileDisplay.innerHTML = "";
-            this.fileDisplay.setAttribute("contenteditable","false");
+            this.fileDisplay.setAttribute("contenteditable", "false");
 
             const imageElement = new Image();
             imageElement.src = URL.createObjectURL(file);
@@ -369,36 +377,66 @@ class Editor {
 
         } else {
 
-            this.fileDisplay.setAttribute("contenteditable","true");
+            this.fileDisplay.setAttribute("contenteditable", "true");
             const text = await readFile(fileHandle);
 
             const ending = file.name.slice(file.name.indexOf("."))
 
             const options = {
-                method:"POST",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify({type:ending})
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type: ending })
             }
 
 
-            const response = await fetch("/highlight",options);
+            const format = await fetch("/highlight", options);
 
-            if (response.ok) {
+            const style = await fetch("/styles", options);
 
-                const json = await response.json();
+
+
+            if (format.ok) {
+
+                const json = await format.json();
+
+                console.log(json);
 
 
                 this.lexer = new Lexer(json);
-            
-                const sel = {selectionStart:0,selectionEnd:0};
-                const action = {type:"paste",content:text};
 
 
-                var res = this.lexer.lex(sel,action);
-                console.log(res);
+            } else {
+
+                this.lexer = new Lexer({ main: { subScopes: [] } });
+
+            }
+
+            const sel = { selectionStart: 0, selectionEnd: 0 };
+            const action = { type: "paste", content: text };
+
+            var res = this.lexer.lex(sel, action);
+            console.log(res);
+
+
+
+            let highlightStyles = document.querySelector("#colorStyles");
+            if (!highlightStyles) {
+                highlightStyles = document.createElement("style");
+                highlightStyles.id = "colorStyles";
+                document.head.append(highlightStyles);
             }
 
 
+            if (style.ok) {
+
+                highlightStyles.textContent = await style.text();
+
+            } else {
+
+                highlightStyles.textContent = `.line *:focus-within {color:red;}`;
+            }
+
+            
 
             const newContent = Lexer.toHtml(res.result);
 
@@ -523,7 +561,7 @@ class Editor {
 
                 this.fileDisplay.classList.add("vertical-scrolling");
                 // Your vertical scroll logic here
-            } else if (isHorizontalScroll && scrolling){
+            } else if (isHorizontalScroll && scrolling) {
                 this.fileDisplay.classList.add("horizontal-scrolling");
             }
 
@@ -539,20 +577,20 @@ class Editor {
 
             const makeGradientColors = (s, e) => {
 
-                const start = s*301;
-                const end = e*301;
+                const start = s * 301;
+                const end = e * 301;
 
-                const diff = end -start;
+                const diff = end - start;
 
 
 
-                return  `hsl(${Math.round(start)}, 70%, 50%) 0%,
-                         hsl(${Math.round(start+diff*(1/6))}, 70%, 50%) 17%,
-                         hsl(${Math.round(start+diff*(2/6))}, 70%, 50%) 34%,
-                         hsl(${Math.round(start+diff*(3/6))}, 70%, 50%) 50%,
-                         hsl(${Math.round(start+diff*(4/6))}, 70%, 50%) 66%,
-                         hsl(${Math.round(start+diff*(5/6))}, 70%, 50%) 83%,
-                         hsl(${Math.round(start+diff)}, 70%, 50%) 100%)`
+                return `hsl(${Math.round(start)}, 70%, 50%) 0%,
+                         hsl(${Math.round(start + diff * (1 / 6))}, 70%, 50%) 17%,
+                         hsl(${Math.round(start + diff * (2 / 6))}, 70%, 50%) 34%,
+                         hsl(${Math.round(start + diff * (3 / 6))}, 70%, 50%) 50%,
+                         hsl(${Math.round(start + diff * (4 / 6))}, 70%, 50%) 66%,
+                         hsl(${Math.round(start + diff * (5 / 6))}, 70%, 50%) 83%,
+                         hsl(${Math.round(start + diff)}, 70%, 50%) 100%)`
             };
 
 
@@ -560,9 +598,9 @@ class Editor {
 
 
             // Calculate a color based on the scroll position
-            const colorVert = makeGradientColors(scrollPercentageVertical(this.fileDisplay.scrollTop),scrollPercentageVertical(this.fileDisplay.scrollTop+this.fileDisplay.clientHeight));
+            const colorVert = makeGradientColors(scrollPercentageVertical(this.fileDisplay.scrollTop), scrollPercentageVertical(this.fileDisplay.scrollTop + this.fileDisplay.clientHeight));
 
-            const colorHori = makeGradientColors(scrollPercentageHorizontal(this.fileDisplay.scrollLeft),scrollPercentageHorizontal(this.fileDisplay.scrollLeft+this.fileDisplay.clientWidth));
+            const colorHori = makeGradientColors(scrollPercentageHorizontal(this.fileDisplay.scrollLeft), scrollPercentageHorizontal(this.fileDisplay.scrollLeft + this.fileDisplay.clientWidth));
 
 
 
@@ -571,7 +609,7 @@ class Editor {
             this.fileDisplay.style.setProperty('--vertical-gradient', `linear-gradient(180deg,${colorVert}`);
             this.fileDisplay.style.setProperty('--horizontal-gradient', `linear-gradient(90deg,${colorHori}`);
 
-        },{passive:true});
+        }, { passive: true });
 
 
         this.fileDisplay.addEventListener("scroll", () => {
@@ -586,7 +624,7 @@ class Editor {
             }, 350);
 
 
-        },{passive:true});
+        }, { passive: true });
     }
 
 
@@ -650,7 +688,7 @@ class Editor {
         let newFrag = document.createDocumentFragment();
 
         newFrag.append(await this.drawDir(this.openDir, 0));
-        
+
 
         this.files.innerHTML = "";
         this.files.append(newFrag);
@@ -725,7 +763,7 @@ class Editor {
 
         });
 
-        
+
         return div;
     }
 
@@ -778,7 +816,7 @@ class Editor {
             const directoryHandle = await window.showDirectoryPicker();
 
             this.openDir = directoryHandle;
-            
+
             console.log(this.db);
 
             this.db.write(directoryHandle);
@@ -804,6 +842,13 @@ class Editor {
 
 
     }
+
+
+    handleCoopFolder = () => {
+
+    };
+
+
 
 }
 

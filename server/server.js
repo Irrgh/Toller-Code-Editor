@@ -10,11 +10,11 @@ const https = require("https");
 const fs = require("fs");
 
 
-console.log(path.join(__dirname,"./private.key"));
+console.log(path.join(__dirname, "./private.key"));
 
 const sslOptions = {
-    key: fs.readFileSync(path.join(__dirname,"./private.key")),
-    cert: fs.readFileSync(path.join(__dirname,"./certificate.crc"))
+    key: fs.readFileSync(path.join(__dirname, "./private.key")),
+    cert: fs.readFileSync(path.join(__dirname, "./certificate.crc"))
 };
 
 
@@ -54,22 +54,20 @@ const sessions = []
 
 server.on('error', (error) => {
     console.error('Server error:', error);
-  });
+});
 
 
 server.get("/", (req, res) => {
 
     let cookie = { user, session } = req.cookies
 
-    console.log(cookie);
-    console.log(sessions);
+    //console.log(cookie);
+    //console.log(sessions);
 
-    let matches = sessions.filter(function (el) {
-        return el.sessionId == session;
-    })
+    let matches = sessions[session];
 
-    console.log(matches);
-    if (matches.length > 0) {
+    //console.log(matches);
+    if (matches) {              // is defined?
         res.redirect("/editor");
     } else {
 
@@ -83,7 +81,7 @@ server.get("/", (req, res) => {
 
 server.get("/editor", (req, res) => {
 
-    
+
     res.sendFile(path.resolve("public/editor/editor.html"));
 });
 
@@ -106,11 +104,14 @@ server.post("/process-login", (req, res) => {
     if (matches.length == 1) {
         console.log(`correct login with: ${username}`);
 
-        const id = Math.random();
-
-        sessions.push({ user: username, sessionId: id })
+        let id = Math.random();
+        while (sessions[id]) {
+            id = Math.random();
+        }
+        sessions[id] = { user: username };
 
         res.cookie("session", id);
+        res.cookie("user", username);
 
 
         res.json({ success: true, redirectUrl: "/editor" });
@@ -125,15 +126,15 @@ server.post("/process-login", (req, res) => {
 
 server.get("/register", (req, res) => {
 
-    
+
     res.sendFile(path.resolve("public/login/register.html"));
 });
 
 
-server.post("/process-register", (req,res) => {
+server.post("/process-register", (req, res) => {
 
 
-    const {username,email,password} = req.body;
+    const { username, email, password } = req.body;
 
     const collision = users.filter((user) => {
         return user.name.toLowerCase() === username.toLowerCase() || user.email === email;
@@ -142,51 +143,101 @@ server.post("/process-register", (req,res) => {
 
     if (collision.length >= 1) {
 
-        res.status(401).json({success:false,message:"There is already a Account with that username or email"});
+        res.status(401).json({ success: false, message: "There is already a Account with that username or email" });
 
     } else {
 
+        let id = Math.random();
 
-        users.push({name:username,email:email,password:password});
-        fileUtil.write("users.json",JSON.stringify(users));
+        while (sessions[id]) {
+            id = Math.random();
+        }
 
-        res.status(200).json({success:true,redirectUrl:"/editor"});
+        sessions[id] = { user: username };
+
+        res.cookie("session", id);
+        res.cookie("user", username);
+
+
+
+
+        users.push({ name: username, email: email, password: password });
+        fileUtil.write("users.json", JSON.stringify(users));
+
+        res.status(200).json({ success: true, redirectUrl: "/editor" });
     }
     console.log(users);
 });
 
 
+server.post("/logout", (req, res) => {
 
-server.post("/highlight", (req,res) => {
+    const session = req.cookies;
+
+    sessions[id] = undefined;
+
+
+    res.clearCookie("user");
+    res.clearCookie("session");
+    res.status(200).json({ success: true });
+});
+
+
+
+
+
+
+server.post("/highlight", (req, res) => {
 
     console.log(req.body);
 
     const type = req.body.type;
-    
+
+
     switch (type) {
         case ".js":
-            res.sendFile(path.resolve("public/parser/java.json"));
+            res.sendFile(path.resolve("public/parser/format/java.json"));
             break;
         case ".java":
-            res.sendFile(path.resolve("public/parser/java.json"));
+            res.sendFile(path.resolve("public/parser/format/java.json"));
             break;
         case ".html":
-            res.sendFile(path.resolve("public/parser/html.json"));
+            res.sendFile(path.resolve("public/parser/format/html.json"));
             break;
         default:
-            res.status(404).json({error:`no parser for ${type}`});
+            res.status(404).json({ error: `no parser for ${type}` });
+            break;
+    }
+
+});
+
+server.post("/styles", (req,res) => {
+
+    console.log(req.body);
+
+    const type = req.body.type;
+
+
+    switch (type) {
+        case ".js":
+            res.sendFile(path.resolve("public/parser/styles/java.css"));
+            break;
+        case ".java":
+            res.sendFile(path.resolve("public/parser/styles/java.css"));
+            break;
+        case ".html":
+            res.sendFile(path.resolve("public/parser/styles/html.css"));
+            break;
+        default:
+            res.status(404).json({ error: `no parser for ${type}` });
             break;
     }
 
 
 
-
-
-
-
-
-
 });
+
+
 
 
 
@@ -206,18 +257,12 @@ server.post("/workspaces", (req, res) => {
 
 
 
-
-
-
-
-
-
 /*** The websocket ***/
 const websocket_package = require("ws");
 const { fileURLToPath } = require("url");
 const { emit } = require("process");
 const websocket_portnumber = 6009;
-const serverSocket = new websocket_package.Server({ port: websocket_portnumber });
+const serverSocket = new websocket_package.Server({ server: server });
 let numberOfClients = 0;
 
 const clients = [];
