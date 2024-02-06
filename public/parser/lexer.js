@@ -34,6 +34,8 @@ class Lexer {
         var after;          // might have to be parsed again
         var inputString;     // has to be parsed
 
+        let newSelection;
+
 
         switch (action.type) {
 
@@ -50,21 +52,36 @@ class Lexer {
                     after = temp.afterInsert;
                     inputString = action.content;
                 }
+                newSelection = { ...selection };
+                newSelection.selectionStart += action.content.length;
+                newSelection.selectionEnd = newSelection.selectionStart;
+
+
                 break;
             case ("backspace"):
+
+                newSelection = { ...selection };
+
                 if (override) {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart);
                     before = temp.beforeInsert;
                     const temp2 = Lexer.split(before, selection.selectionEnd);
                     after = temp2.afterInsert;
                     inputString = "";
+
+
                 } else {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart - 1);    // removes the single char before selection.start
                     before = temp.beforeInsert;
-                    const temp2 = Lexer.split(before, selection.selectionStart);
+                    const temp2 = Lexer.split(temp.afterInsert, 1);
                     after = temp2.afterInsert;
                     inputString = "";
+
+                    newSelection.selectionStart += -1;
                 }
+
+                newSelection.selectionEnd = newSelection.selectionStart;
+
                 break;
             case ("delete"):
                 if (override) {
@@ -76,10 +93,16 @@ class Lexer {
                 } else {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart);    // removes the single char after selection.start
                     before = temp.beforeInsert;
-                    const temp2 = Lexer.split(before, selection.selectionStart + 1);
+                    const temp2 = Lexer.split(before, 1);
                     after = temp2.afterInsert;
                     inputString = "";
                 }
+
+                newSelection = { ...selection };
+                newSelection.selectionStart;
+                newSelection.selectionEnd = newSelection.selectionStart;
+
+
                 break;
             case ("move"):
                 if (override) {
@@ -93,11 +116,18 @@ class Lexer {
 
         }
 
-        let output = before;                                           // output initiation
+
+        let output = before;         // output initiation
+
 
 
         if (before.length !== 0) {
-            var scopeStack = before[before.length - 1].stack;           // stack initiation
+            let last = before[before.length - 1];
+
+            var scopeStack = before[before.length - 1].stack;  
+            if (last.type == "close") {
+                scopeStack.pop();
+            }                       // stack initiation
         } else {
             var scopeStack = new Stack();
             scopeStack.push(this.language.main);
@@ -119,6 +149,12 @@ class Lexer {
 
         var buffer = "";
 
+        let stackBeforeParse = scopeStack.copy();
+
+
+        console.log("before: ",[...before]);
+
+
 
         let partialResult = this.parseStep(output, scopeStack, buffer, inputChars);
 
@@ -135,14 +171,35 @@ class Lexer {
 
 
 
-        if (output.length !== 0 && after.length !== 0) {                                             // inserted input did not change the scopeStack!
-            if (output[output.length - 1].stack == after[0].stack) {
+        if (output.length !== 0 && after.length !== 0) {
+            let lastInOutput = output[output.length - 1];
+            let firstInAfter = after[0];
+
+
+
+
+            // inserted input did not change the scopeStack!
+            if (scopeStack.equals(stackBeforeParse)) {
+
+                if (lastInOutput.type == "text" && lastInOutput.type == firstInAfter.type) {
+
+                    lastInOutput.content = lastInOutput.content.concat(firstInAfter.content);
+
+                    after = after.slice(1);
+
+                }
+
+                console.log(lastInOutput.stack, " == ", firstInAfter.stack);
 
 
                 this.lastResult = output.concat(after);
 
                 //console.log(`efficient combine took ${combineEnd-combineStart}ms`);
-                return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime } };
+                return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime }, selection: newSelection };
+            } else {
+
+                console.log(lastInOutput.stack, " != ", firstInAfter.stack);
+
             }
         }
 
@@ -152,6 +209,9 @@ class Lexer {
         let afterToStringEnd = performance.now();
         let afterToStringTime = afterToStringEnd - afterToStringStart;
 
+        console.log(Lexer.resultToString(after));
+
+        console.log(`append length: ${inputChars.length}`);
 
 
         let parseAppendStart = performance.now();
@@ -171,15 +231,20 @@ class Lexer {
 
         this.lastResult = output;
         //return this.lastResult;
-        return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime, afterToString: afterToStringTime, parseAppend: parseAppendTime } };
+        return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime, afterToString: afterToStringTime, parseAppend: parseAppendTime }, selection: newSelection };
     }
 
 
     static split = (input, splitPos) => {
 
+
+
+
         if (!input) {
             return { beforeInsert: [], afterInsert: [] };
         }
+
+        input = [...input];
 
         if (splitPos == 0) {
             return { beforeInsert: [], afterInsert: input };
@@ -197,7 +262,7 @@ class Lexer {
 
             //console.log(parseElement);
 
-            if (parseElement.type != "controll") {
+            if (parseElement.type != "controll" || true) {
 
                 totalChars += parseElement.content.length;
             }
@@ -221,6 +286,9 @@ class Lexer {
 
         const after = input.slice(lastSafe + 2);
 
+
+
+
         if (totalChars > splitPos) {
 
             var toDissect = { ...input[lastSafe + 1] };
@@ -243,6 +311,8 @@ class Lexer {
             after.unshift(input[lastSafe + 1]);
         }
 
+        
+
         return { beforeInsert: before, afterInsert: after };
     }
 
@@ -251,10 +321,7 @@ class Lexer {
         if (!result) { return "" };
 
         const onlyContent = result.map((element) => {
-            if (element.type != "controll") {
-                return element.content;
-            }
-            return "";
+            return element.content;
         });
         return onlyContent.join("");
     }
@@ -263,14 +330,20 @@ class Lexer {
 
         const controll = [{ type: "controll", name: "CR", string: "\r" }, { type: "controll", name: "NL", string: "\n" }];
 
-
+        scopeStack = scopeStack.copy();
 
         for (var i = 0; i < inputChars.length; i++) {
 
             const scope = scopeStack.peek();
+
+            if (!scope) {
+                scope = {type:"open", name:"error", content:"", subScopes:[]};  // maybe error handling
+            }
+
+
             //console.log(scopeStack);
 
-
+            console.log(scopeStack);
             //console.log(scope);
 
             inputBuffer += inputChars[i];
@@ -297,7 +370,7 @@ class Lexer {
                 return acc;
             }, []);
 
-            const list = subScopes.concat((this.language.main === scope ? [] : { ...scope, type: "close" }), controll);
+            const list = subScopes.concat((this.language.main == scope ? [] : { ...scope, type: "close" }), controll);
 
             const reserved = Language.getReserved(this.language, scopeStack.copy());
             //console.log(reserved);
@@ -357,7 +430,10 @@ class Lexer {
                 return startBuffer.includes(el);
             });
 
-            //console.log(list);
+            console.log(list);
+            console.log(startBuffer);
+            console.log(startElement);
+            console.log(both);
 
 
 
@@ -465,78 +541,68 @@ class Lexer {
                 //console.log(inputBuffer,both.length,startBuffer.length,startElement.length,output.length);
                 inputBuffer = "";
 
-        } else if (startBuffer.length == 0 && startElement.length > 0) {
+            } else if (startBuffer.length == 0 && startElement.length > 0) {
 
-            var el = startElement[0];
-            //console.log(res);     // this part is only for opening scopes rn
-
-
+                var el = startElement[0];
+                //console.log(res);     // this part is only for opening scopes rn
 
 
-            switch (el.type) {
-                case "open":
-                    var resChar = inputBuffer.slice(0, el.open.length);
-                    var rest = inputBuffer.slice(el.open.length);
-                    scopeStack.push(el);
 
-                    output.push({ type: "open", name: el.name, content: resChar, stack: scopeStack.copy() });
 
-                    if (rest.length > 0) {
-                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                    }
+                switch (el.type) {
+                    case "open":
+                        var resChar = inputBuffer.slice(0, el.open.length);
+                        var rest = inputBuffer.slice(el.open.length);
+                        scopeStack.push(el);
 
-                    break;
-                case "close":
-                    var resChar = inputBuffer.slice(0, el.close.length);
-                    var rest = inputBuffer.slice(el.close.length);
-                    output.push({ type: "close", name: el.name, content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "open", name: el.name, content: resChar, stack: scopeStack.copy() });
 
-                    if (rest.length > 0) {
-                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                    }
+                        if (rest.length > 0) {
+                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        }
 
-                    scopeStack.pop();
-                    break;
-                case "reserved":
-                    var resChar = inputBuffer.slice(0, el.string.length);
-                    var rest = inputBuffer.slice(el.string.length);
-                    output.push({ type: "reversed", name: el.name, content: resChar, stack: scopeStack.copy() });
+                        break;
+                    case "close":
+                        var resChar = inputBuffer.slice(0, el.close.length);
+                        var rest = inputBuffer.slice(el.close.length);
+                        output.push({ type: "close", name: el.name, content: resChar, stack: scopeStack.copy() });
 
-                    if (rest.length > 0) {
-                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                    }
+                        if (rest.length > 0) {
+                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        }
 
-                    break;
-                case "controll":
-                    var resChar = inputBuffer.slice(0, el.string.length);
-                    var rest = inputBuffer.slice(el.string.length);
-                    output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() });
+                        scopeStack.pop();
+                        break;
+                    case "reserved":
+                        var resChar = inputBuffer.slice(0, el.string.length);
+                        var rest = inputBuffer.slice(el.string.length);
+                        output.push({ type: "reversed", name: el.name, content: resChar, stack: scopeStack.copy() });
 
-                    if (rest.length > 0) {
-                        output.push({ type: "text", content: rest, stack: scopeStack.copy() });
-                    }
+                        if (rest.length > 0) {
+                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        }
 
-                    break;
+                        break;
+                    case "controll":
+                        var resChar = inputBuffer.slice(0, el.string.length);
+                        var rest = inputBuffer.slice(el.string.length);
+                        output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() });
+
+                        if (rest.length > 0) {
+                            output.push({ type: "text", content: rest, stack: scopeStack.copy() });
+                        }
+
+                        break;
+                }
+
+                console.log(startElement, inputBuffer, i);
+
+                inputBuffer = "";
+
             }
 
-            console.log(startElement, inputBuffer, i);
-
-
-
-            startElement.forEach((el) => {
-                if (el.type == "controll" && el != el) {
-                    //console.log(el.name);
-                    //output.push({ type: "controll", name: el.name, content: resChar, stack: scopeStack.copy() })
-                }
-            });
-
-
-            inputBuffer = "";
 
         }
-
-
-    }
 
         return { output: output, buffer: inputBuffer, stack: scopeStack };
 
@@ -545,152 +611,159 @@ class Lexer {
 
     static toHtml = (result) => {
 
-    const localDepth = (segment) => {
-        return segment.stack.toArray().filter((el) => {
-            return segment.name == el.name
-        }).length - 1;
-    }
-
-    const globalDepth = (segment) => {
-        return segment.stack.size() - 1;
-    }
-
-
-    const fragment = document.createDocumentFragment();
-
-    let currentLine = document.createElement("div");
-    currentLine.classList.add("line");
-
-    let spanStack = new Stack();
-
-    let init = document.createElement("span");
-    init.append(document.createTextNode(result[0].content));
-    init.setAttribute("local-depth", `${localDepth(result[0])}`);
-    init.setAttribute("global-depth", `${globalDepth(result[0])}`);
-
-    spanStack.push(init);
-
-    for (let i = 0; i < result.length; i++) {
-
-        let iter = result[i];
-
-        switch (iter.type) {
-
-            case "open": {
-                let span = document.createElement("span");
-                span.append(document.createTextNode(iter.content));
-                span.style.setProperty("--local-depth", localDepth(iter));
-                span.style.setProperty("--global-depth", globalDepth(iter));
-                span.classList.add(iter.name);
-
-                let parent = spanStack.peek();
-
-                (parent != null) ? parent.append(span) : console.log("why open");
-
-                spanStack.push(span);
-                break;
-            }
-            case "close": {
-                let span = document.createElement("span");
-
-
-                if (!iter.content.includes("\n")) {
-                    span.append(document.createTextNode(iter.content));
-                }
-
-                span.style.setProperty("--local-depth", localDepth(iter));
-                span.style.setProperty("--global-depth", globalDepth(iter));
-                span.classList.add(iter.name);
-
-
-                let parent = spanStack.peek();
-
-                (parent != null) ? parent.append(span) : console.log("why close");
-                spanStack.pop();
-
-                break;
-            }
-            case "text": {
-                let span = document.createElement("span");
-                span.innerText = iter.content;
-                span.style.setProperty("--global-depth", globalDepth(iter));
-
-
-                if (iter.content.includes("\n") || iter.content == "") {
-                    console.log(iter.content);
-                }
-
-
-
-                span.classList.add("plain");
-
-                let parent = spanStack.peek();
-
-                (parent != null) ? parent.append(span) : console.log("why text");
-
-                break;
-            }
-            case "reserved": {
-                let span = document.createElement("span");
-                span.innerText = iter.content;
-                span.style.setProperty("--global-depth", globalDepth(iter));
-                span.classList.add(`${iter.name}`);
-
-                let parent = spanStack.peek();
-
-                (parent != null) ? parent.append(span) : currentLine.append(span);
-
-                break;
-            }
-
-
-            case "controll": {
-                switch (iter.name) {
-                    case "CR":
-                        let br = document.createElement("br");
-                        currentLine.append(br);
-
-
-
-
-
-                        break;
-                    case "NL":
-                        fragment.append(currentLine);
-
-                        currentLine = document.createElement("div");
-                        currentLine.classList.add("line");
-
-                        //console.log(spanStack);
-
-                        let temp = spanStack.toArray().reduce((acc, curr) => {
-
-                            let last = acc.peek();
-                            let copy = curr.cloneNode();
-
-                            if (!last) {
-
-                                currentLine.append(copy);
-                            } else {
-
-                                last.append(copy);
-                            }
-
-                            acc.push(copy);
-
-                            return acc;
-                        }, new Stack());
-                        spanStack = temp;
-                        break;
-                }
-                break;
-            }
+        const localDepth = (segment) => {
+            return Math.max(segment.stack.toArray().filter((el) => {
+                return segment.name == el.name
+            }).length - 1, 0);
         }
 
-    }
+        const globalDepth = (segment) => {
+            return Math.max(segment.stack.size() - 1, 0);
+        }
 
-    return fragment;
-};
+
+        const fragment = document.createDocumentFragment();
+
+        let currentLine = document.createElement("div");
+        currentLine.classList.add("line");
+
+        let spanStack = new Stack();
+
+        let init = document.createElement("span");
+        //init.append(document.createTextNode(result[0].content));
+        init.style.setProperty("--local-depth", 0);
+        init.style.setProperty("--global-depth", 0);
+
+
+        //console.log(result.slice(0,31));
+
+        for (let i = 0; i < result.length; i++) {
+
+            let iter = result[i];
+            //console.log(spanStack);
+
+            //console.log(i,iter);
+
+
+            switch (iter.type) {
+
+                case "open": {
+                    let span = document.createElement("span");
+                    span.append(document.createTextNode(iter.content));
+                    span.style.setProperty("--local-depth", localDepth(iter));
+                    span.style.setProperty("--global-depth", globalDepth(iter));
+                    span.classList.add(iter.name);
+
+                    let parent = spanStack.peek();
+
+                    (parent != null) ? parent.append(span) : currentLine.append(span);
+
+                    spanStack.push(span);
+                    break;
+                }
+                case "close": {
+                    let span = document.createElement("span");
+
+
+                    if (!iter.content.includes("\n") && !iter.content.includes("\r")) {
+                        span.append(document.createTextNode(iter.content));
+                    }
+
+                    span.style.setProperty("--local-depth", localDepth(iter));
+                    span.style.setProperty("--global-depth", globalDepth(iter));
+                    span.classList.add(iter.name);
+
+
+                    let parent = spanStack.peek();
+
+                    (parent != null) ? parent.append(span) : currentLine.append(span);
+                    spanStack.pop();
+
+                    break;
+                }
+                case "text": {
+                    let span = document.createElement("span");
+                    span.innerText = iter.content;
+                    span.style.setProperty("--global-depth", globalDepth(iter));
+
+
+
+
+
+
+                    span.classList.add("plain");
+
+                    let parent = spanStack.peek();
+
+
+                    (parent != null) ? parent.append(span) : currentLine.append(span);
+
+                    break;
+                }
+                case "reserved": {
+                    let span = document.createElement("span");
+                    span.innerText = iter.content;
+                    span.style.setProperty("--global-depth", globalDepth(iter));
+                    span.classList.add(`${iter.name}`);
+
+                    let parent = spanStack.peek();
+
+                    (parent != null) ? parent.append(span) : currentLine.append(span);
+
+                    break;
+                }
+
+
+                case "controll": {
+                    switch (iter.name) {
+                        case "CR":
+                            let br = document.createElement("br");
+                            currentLine.append(br);
+                            //console.log(currentLine);
+
+
+
+
+                            break;
+                        case "NL":
+                            fragment.append(currentLine);
+
+                            currentLine = document.createElement("div");
+                            currentLine.classList.add("line");
+
+                            //console.log(spanStack);
+
+                            let temp = spanStack.toArray().reduce((acc, curr) => {
+
+                                let last = acc.peek();
+                                let copy = curr.cloneNode();
+
+                                if (!last) {
+
+                                    currentLine.append(copy);
+                                } else {
+
+                                    last.append(copy);
+                                }
+
+                                acc.push(copy);
+
+                                return acc;
+                            }, new Stack());
+                            spanStack = temp;
+                            break;
+                    }
+                    break;
+                }
+            }
+
+        }
+
+
+
+
+        return fragment;
+    };
 
 
 }

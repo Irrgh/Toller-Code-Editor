@@ -213,34 +213,72 @@ class Editor {
 
 
 
-
-
-
         this.fileDisplay.addEventListener("keydown", (event) => {
 
-            console.log(this.getSelectionIndecies(this.fileDisplay));
+
 
             let start = performance.now();
-            this.getTextContent(this.fileDisplay);
+            let action;
+
+            console.log(event.key);
+
+            switch (event.key) {
+
+                case "Tab":
+                    event.preventDefault();
+                    action = { type: "paste", content: "\t" };
+                    break;
+                case "Enter":
+                    event.preventDefault();
+                    action = { type: "paste", content: "\r\n" };
+                    break;
+                case "Delete":
+                    event.preventDefault();
+                    action = { type: "delete", content: "" };
+                    break;
+                case "Backspace":
+                    event.preventDefault();
+                    action = { type: "backspace", content: "" };
+                    break;
+                case "ArrowUp":
+                    break;
+                case "ArrowDown":
+                    break;
+                case "ArrowLeft":
+                    break;
+                case "ArrowRight":
+                    break;
+                default:
+                    event.preventDefault();
+                    if (event.key.length == 1) {
+                        action = { type: "paste", content: event.key };
+                    }
+                    break;
+
+            }
+
+            let sel = this.getSelectionIndecies();
+
+            console.log(sel);
+
+            let res = this.lexer.lex(sel, action);
+
+            console.log(res);
+
+            this.fileDisplay.innerHTML = "";
+
+            let newDoc = Lexer.toHtml(res.result);
+
+
+            this.fileDisplay.append(newDoc);
+
+
             let end = performance.now();
 
             console.log(`time needed: ${end - start} ms`);
 
+            this.restoreSelectionIndices(res.selection);
 
-            if (event.key === "Tab") {
-                event.preventDefault(); // Prevent the default Tab behavior
-
-                // Manually insert a tab character at the current caret position
-                var tabNode = document.createTextNode("\t");
-                var selection = window.getSelection();
-                var range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(tabNode);
-                range.setStartAfter(tabNode);
-                range.setEndAfter(tabNode);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
 
             if (event.key === "Enter") {
             }
@@ -436,7 +474,7 @@ class Editor {
                 highlightStyles.textContent = `.line *:focus-within {color:red;}`;
             }
 
-            
+
 
             const newContent = Lexer.toHtml(res.result);
 
@@ -468,6 +506,9 @@ class Editor {
                 }
                 if (node.tagName.toLowerCase() === "div") {
                     textContent.push("\n")
+                }
+                if (node.tagName.toLowerCase() === "br") {
+                    textContent.push("\r");
                 }
             }
         }
@@ -515,6 +556,73 @@ class Editor {
         return fragment;
     }
 
+    restoreSelectionIndices = (savedSelection) => {
+
+        let start = savedSelection.selectionStart;
+        let end = savedSelection.selectionEnd;
+        let selection = window.getSelection();
+        let range = document.createRange();
+
+
+        let walker = document.createTreeWalker(this.fileDisplay);
+        let lastLength = 0;
+        let currentLength = 0;
+
+        let startSet = false;
+        let endSet = false;
+
+        let waitingForNewline = false;
+
+        while (walker.nextNode()) {
+
+            let curr = walker.currentNode;
+            if (curr.nodeType === Node.TEXT_NODE) {
+                currentLength += curr.nodeValue.length;
+
+            } else if (curr.nodeType === Node.ELEMENT_NODE) {
+
+                if (curr.tagName.toLowerCase() === "div") {
+                    currentLength++;
+                    waitingForNewline = false;
+                } else if (curr.tagName.toLowerCase() === "br") {
+                    currentLength++;
+                    waitingForNewline = true;
+                }
+            }
+
+
+
+            if (currentLength > start && !startSet) {
+
+                let offset = Math.min(curr.textContent.length, start - lastLength + (curr.parentNode.classList.contains("line") ? 0 : 1));  // please dont ask i dont know
+
+                range.setStart(curr, offset);
+
+                startSet = true;
+            }
+
+
+            if (currentLength > start && !endSet) {
+
+                let offset = Math.min(curr.textContent.length, end - lastLength + (curr.parentNode.classList.contains("line") ? 0 : 1));
+
+                range.setEnd(curr, offset);
+                endSet = true;
+                break;
+            }
+
+
+
+            lastLength = currentLength;
+        }
+
+
+        console.log(range);
+
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+    }
 
     getSelectionIndecies = () => {
 
@@ -540,11 +648,11 @@ class Editor {
         content.setStart(range.startContainer, range.startOffset);
         content.setEnd(range.endContainer, range.endOffset);
 
-        const startStr = start.toString();
-        const endStr = end.toString();
+        const startStr = Editor.getTextContentFromRange(start);
+        const endStr = Editor.getTextContentFromRange(end);
         const contentStr = Editor.getTextContentFromRange(content);
 
-        return { selectionStart: startStr.length, selectionEnd: endStr.length, content: contentStr };
+        return { selectionStart: Math.max(startStr.length - 1, 0), selectionEnd: Math.max(endStr.length - 1, 0), content: contentStr };
     }
 
     addScrollBehavior = () => {

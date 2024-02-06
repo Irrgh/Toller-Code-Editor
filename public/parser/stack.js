@@ -11,7 +11,7 @@ class Stack {
     // Remove and return the top element from the stack
     pop() {
         if (this.isEmpty()) {
-            throw "Stack is empty" // Stack is empty
+            return;
         }
         return this.items.pop();
     }
@@ -56,6 +56,27 @@ class Stack {
 
         return s;
     }
+
+    equals (other) {
+
+        if (this.size() != other.size()) {
+            return false;
+        }
+
+        let arr1 = this.toArray();
+        let arr2 = other.toArray();
+
+        for (let i = 0; i < arr1.length; i++) {
+
+            if (arr1[i] != arr2[i]) {
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+
 
 }
 
