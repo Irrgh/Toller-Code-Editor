@@ -594,7 +594,22 @@ class Editor {
 
             if (currentLength > start && !startSet) {
 
-                let offset = Math.min(curr.textContent.length, start - lastLength + (curr.parentNode.classList.contains("line") ? 0 : 1));  // please dont ask i dont know
+                let isLineRelated;
+
+                if (curr.nodeType === Node.ELEMENT_NODE) {
+                    isLineRelated = ((curr.parentNode.classList.contains("line") || curr.classList.contains("line")) ? 0 : 1);
+                } else {
+                    isLineRelated = ((curr.parentNode.classList.contains("line")) ? 0 : 1);
+                }
+
+
+
+
+
+
+                let offset = start - lastLength + isLineRelated;  // please dont ask i dont know
+
+                console.log("offset: ", offset);
 
                 range.setStart(curr, offset);
 
@@ -604,7 +619,17 @@ class Editor {
 
             if (currentLength > start && !endSet) {
 
-                let offset = Math.min(curr.textContent.length, end - lastLength + (curr.parentNode.classList.contains("line") ? 0 : 1));
+                let isLineRelated;
+
+                if (curr.nodeType === Node.ELEMENT_NODE) {
+                    isLineRelated = ((curr.parentNode.classList.contains("line") || curr.classList.contains("line")) ? 0 : 1);
+                } else {
+                    isLineRelated = ((curr.parentNode.classList.contains("line")) ? 0 : 1);
+                }
+
+
+
+                let offset = end - lastLength + isLineRelated;
 
                 range.setEnd(curr, offset);
                 endSet = true;
@@ -936,17 +961,57 @@ class Editor {
         }
     }
 
+    readDirectory = async () => {
 
-    handleShareFolder = () => {
+        let formData = new FormData();
+
+        let pathString = JSON.stringify(await this.openDir.resolve(this.openDir));
+
+        formData.append("path", pathString);
+        formData.append("root", "true");
+
+        const response = await fetch('/workspaces', {
+            method: 'POST',
+            body: formData
+        });
 
 
-        var request = new XMLHttpRequest();
-        request.open("POST", "/workspaces", true);
-        request.onload = function () {
-            console.log(request.responseText);
+
+        let helper = async (directoryHandle) => {
+
+            for await (const [name, handle] of directoryHandle.entries()) {
+
+                if (handle.kind === "directory") {
+                    helper(handle);
+                } else {
+
+                    let formData = new FormData();
+
+                    let pathString = JSON.stringify(await this.openDir.resolve(handle));
+
+                    formData.append("path", pathString);
+                    formData.append("file", await handle.getFile());
+
+                    const response = await fetch('/workspaces', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+
+                }
+
+            }
+
         }
-        request.send();
 
+        await helper(this.openDir);
+    }
+
+
+
+    handleShareFolder = async () => {
+
+        await this.readDirectory();
 
 
     }

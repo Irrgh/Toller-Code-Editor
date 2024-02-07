@@ -8,6 +8,7 @@ const fileUtil = require("./FileUtil.js");
 const bodyParser = require('body-parser');
 const https = require("https");
 const fs = require("fs");
+const multer = require("multer");
 
 
 console.log(path.join(__dirname, "./private.key"));
@@ -28,7 +29,7 @@ server.use(bodyParser.json());
 server.use(cookieparser());
 server.use(express.static(path.resolve("./public")));
 server.use(express.urlencoded({ extended: false, limit: '1mb' }));
-server.use(express.json());
+server.use(express.json({limit:"1mb"}));
 //server.listen(portnumber, function () {
 //    console.log(`listening at port ${portnumber}`)
 //});
@@ -177,6 +178,9 @@ server.post("/logout", (req, res) => {
     sessions[id] = undefined;
 
 
+    fs.rmSync(path.join("server/uploads", req.cookies.user), { recursive: true });
+
+
     res.clearCookie("user");
     res.clearCookie("session");
     res.status(200).json({ success: true });
@@ -238,13 +242,42 @@ server.post("/styles", (req,res) => {
 });
 
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        
+        let filePath = JSON.parse(req.body.path);
+        filePath.pop();
+        console.log(filePath);
+        
+        const userFolder = path.join('server/uploads', req.cookies.user, filePath.join("/")); // Construct the directory path
+
+
+        // Check if the directory exists, if not, create it
+        if (!fs.existsSync(userFolder)) {
+            fs.mkdirSync(userFolder, { recursive: true }); // Create directory recursively
+        }
+        cb(null, userFolder);
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
 
 
 
-server.post("/workspaces", (req, res) => {
+server.post("/workspaces", upload.single("file") , (req, res) => {
 
 
-    console.log(req.cookies);
+
+    if (req.body.root == "true") {
+        fs.rmSync(path.join("server/uploads", req.cookies.user), { recursive: true });
+    }
+    
+    
+
+    
     res.writeHead(200)
     res.write("eee");
     res.end();

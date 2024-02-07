@@ -73,17 +73,37 @@ class Lexer {
                 } else {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart - 1);    // removes the single char before selection.start
                     before = temp.beforeInsert;
+
+                    console.log([...before]);
+
+                    let lastOfBefore = { ...before.pop() };
+                    let firstOfAfter = { ...temp.afterInsert[0] };
+
+
+                    console.log(lastOfBefore, firstOfAfter, before.length);
+
+                    if (!(lastOfBefore.name == "CR")) {
+                        before.push(lastOfBefore);
+                    } else {
+                        newSelection.selectionStart--;
+                    }
+                    console.log(before.length);
+
+
                     const temp2 = Lexer.split(temp.afterInsert, 1);
                     after = temp2.afterInsert;
                     inputString = "";
 
-                    newSelection.selectionStart += -1;
+                    newSelection.selectionStart--;
                 }
 
                 newSelection.selectionEnd = newSelection.selectionStart;
 
                 break;
             case ("delete"):
+
+                newSelection = { ...selection };
+
                 if (override) {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart);
                     before = temp.beforeInsert;
@@ -93,13 +113,33 @@ class Lexer {
                 } else {
                     const temp = Lexer.split(this.lastResult, selection.selectionStart);    // removes the single char after selection.start
                     before = temp.beforeInsert;
-                    const temp2 = Lexer.split(before, 1);
+
+                    let firstOfAfter = { ...temp.afterInsert[0] };
+                    let lastOfBefore = { ...before.pop() };
+
+                    console.log(lastOfBefore, firstOfAfter);
+                    if (!(firstOfAfter.name == "CR")) {
+                        before.push(lastOfBefore);
+                    
+                        if (lastOfBefore.name == "NL") {
+
+                            newSelection.selectionStart -= (lastOfBefore.content.length - 1);
+                        }
+
+                    } 
+                        
+
+                    
+
+
+
+                    const temp2 = Lexer.split(temp.afterInsert, 1);
                     after = temp2.afterInsert;
                     inputString = "";
                 }
 
-                newSelection = { ...selection };
-                newSelection.selectionStart;
+
+                
                 newSelection.selectionEnd = newSelection.selectionStart;
 
 
@@ -124,7 +164,7 @@ class Lexer {
         if (before.length !== 0) {
             let last = before[before.length - 1];
 
-            var scopeStack = before[before.length - 1].stack;  
+            var scopeStack = before[before.length - 1].stack;
             if (last.type == "close") {
                 scopeStack.pop();
             }                       // stack initiation
@@ -152,7 +192,7 @@ class Lexer {
         let stackBeforeParse = scopeStack.copy();
 
 
-        console.log("before: ",[...before]);
+        //console.log("before: ",[...before]);
 
 
 
@@ -170,6 +210,9 @@ class Lexer {
         //console.log(`insert parsing took ${parseEnd-parseStart}ms`);
 
 
+        console.log("remaining buffer: ",buffer,buffer.length);
+
+
 
         if (output.length !== 0 && after.length !== 0) {
             let lastInOutput = output[output.length - 1];
@@ -179,7 +222,7 @@ class Lexer {
 
 
             // inserted input did not change the scopeStack!
-            if (scopeStack.equals(stackBeforeParse)) {
+            if (scopeStack.equals(stackBeforeParse) && buffer.length == 0) {
 
                 if (lastInOutput.type == "text" && lastInOutput.type == firstInAfter.type) {
 
@@ -189,7 +232,7 @@ class Lexer {
 
                 }
 
-                console.log(lastInOutput.stack, " == ", firstInAfter.stack);
+                //console.log(lastInOutput.stack, " == ", firstInAfter.stack);
 
 
                 this.lastResult = output.concat(after);
@@ -198,7 +241,7 @@ class Lexer {
                 return { result: this.lastResult, times: { parseInsert: parseInsertTime, init: initTime }, selection: newSelection };
             } else {
 
-                console.log(lastInOutput.stack, " != ", firstInAfter.stack);
+                //console.log(lastInOutput.stack, " != ", firstInAfter.stack);
 
             }
         }
@@ -246,7 +289,7 @@ class Lexer {
 
         input = [...input];
 
-        if (splitPos == 0) {
+        if (splitPos <= 0) {
             return { beforeInsert: [], afterInsert: input };
         }
 
@@ -311,7 +354,7 @@ class Lexer {
             after.unshift(input[lastSafe + 1]);
         }
 
-        
+
 
         return { beforeInsert: before, afterInsert: after };
     }
@@ -337,13 +380,13 @@ class Lexer {
             const scope = scopeStack.peek();
 
             if (!scope) {
-                scope = {type:"open", name:"error", content:"", subScopes:[]};  // maybe error handling
+                scope = { type: "open", name: "error", content: "", subScopes: [] };  // maybe error handling
             }
 
 
             //console.log(scopeStack);
 
-            console.log(scopeStack);
+            //console.log(scopeStack);
             //console.log(scope);
 
             inputBuffer += inputChars[i];
@@ -430,10 +473,10 @@ class Lexer {
                 return startBuffer.includes(el);
             });
 
-            console.log(list);
-            console.log(startBuffer);
-            console.log(startElement);
-            console.log(both);
+            //console.log(list);
+            //console.log(startBuffer);
+            //console.log(startElement);
+            //console.log(both);
 
 
 
@@ -576,7 +619,7 @@ class Lexer {
                     case "reserved":
                         var resChar = inputBuffer.slice(0, el.string.length);
                         var rest = inputBuffer.slice(el.string.length);
-                        output.push({ type: "reversed", name: el.name, content: resChar, stack: scopeStack.copy() });
+                        output.push({ type: "reserved", name: el.name, content: resChar, stack: scopeStack.copy() });
 
                         if (rest.length > 0) {
                             output.push({ type: "text", content: rest, stack: scopeStack.copy() });
@@ -707,6 +750,7 @@ class Lexer {
                     span.classList.add(`${iter.name}`);
 
                     let parent = spanStack.peek();
+
 
                     (parent != null) ? parent.append(span) : currentLine.append(span);
 
