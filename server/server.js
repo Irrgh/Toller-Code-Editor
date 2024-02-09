@@ -29,7 +29,7 @@ server.use(bodyParser.json());
 server.use(cookieparser());
 server.use(express.static(path.resolve("./public")));
 server.use(express.urlencoded({ extended: false, limit: '1mb' }));
-server.use(express.json({limit:"1mb"}));
+server.use(express.json({ limit: "1mb" }));
 //server.listen(portnumber, function () {
 //    console.log(`listening at port ${portnumber}`)
 //});
@@ -215,7 +215,7 @@ server.post("/highlight", (req, res) => {
 
 });
 
-server.post("/styles", (req,res) => {
+server.post("/styles", (req, res) => {
 
     console.log(req.body);
 
@@ -244,11 +244,11 @@ server.post("/styles", (req,res) => {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        
+
         let filePath = JSON.parse(req.body.path);
         filePath.pop();
-        console.log(filePath);
-        
+        //console.log(filePath);
+
         const userFolder = path.join('server/uploads', req.cookies.user, filePath.join("/")); // Construct the directory path
 
 
@@ -266,24 +266,82 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 
+const workspaces = [];
 
-server.post("/workspaces", upload.single("file") , (req, res) => {
 
+
+server.post("/upload", upload.single("file"), (req, res) => {
+
+    const user = req.cookies.user;
+    const workspaceElement = { path: JSON.parse(req.body.path), kind: req.body.kind };
+
+    if (!workspaces[user]) {
+        workspaces[user] = {};
+    }
 
 
     if (req.body.root == "true") {
-        fs.rmSync(path.join("server/uploads", req.cookies.user), { recursive: true });
-    }
-    
-    
 
-    
-    res.writeHead(200)
-    res.write("eee");
+        workspaces[user].root = workspaceElement;
+
+    } else {
+
+        if (!workspaces[user].files) {
+            workspaces[user].files = [workspaceElement];
+        } else {
+            workspaces[user].files.push(workspaceElement);
+        }
+    }
+
+
+
+    let root = path.join("server/uploads", req.cookies.user);
+
+    if (req.body.root == "true" && fs.existsSync(root)) {
+        fs.rmSync(root, { recursive: true });
+    }
+
+
+    res.status(200);
+    res.json({ success: true });
     res.end();
 });
 
 
+
+
+server.post("/workspaces", (req, res) => {
+
+    const files = fs.readdirSync("server/uploads");
+
+    const result = files.filter((file) => {
+
+        console.log(workspaces[file] != undefined);
+        const filePath = path.join("server/uploads", file);
+        const stats = fs.statSync(filePath);
+        console.log(stats.isDirectory());
+        return stats.isDirectory() && workspaces[file];
+    });
+
+    res.status(200).json(result);
+
+});
+
+server.post("/workspaces/content", upload.none(), (req, res) => {
+
+    let requested = req.body.workspace;
+    console.log(req.body);
+
+    console.log(workspaces[requested]);
+
+
+    if (workspaces[requested]) {
+        res.status(200).json(workspaces[requested]);
+    } else {
+        res.status(404).json({ error: "there is no such workspace" });
+    }
+
+});
 
 
 
@@ -294,29 +352,35 @@ server.post("/workspaces", upload.single("file") , (req, res) => {
 const websocket_package = require("ws");
 const { fileURLToPath } = require("url");
 const { emit } = require("process");
-const websocket_portnumber = 6009;
-const serverSocket = new websocket_package.Server({ server: server });
+//const websocket_portnumber = 6009;
+const serverSocket = new websocket_package.Server({ server: app });
 let numberOfClients = 0;
+
+
 
 const clients = [];
 
-
 serverSocket.on('connection', function (socket) {
-    let client_id = numberOfClients;
+
     numberOfClients++;
-    let client = { id: client_id, socket: socket };
-    clients.push(client);
-    console.log(`client ${client_id} accepted`);
+
+    socket.send("test");
+
 
     socket.onmessage = function (event) {
-        let client = clients[client_id];
-        console.log(`message from ${client_id}: ${event.data}`);
-        socket.send(`Hello client ${client_id}, here is ${Math.random()}`);
+
+        
+
+
+        console.log("Received message:", event.data);
 
     }
     socket.onclose = function (event) {
         // console.log(`client ${numberOfClients} closed the connection`);
+        numberOfClients--;
     }
+
+
 
 });
 

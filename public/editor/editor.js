@@ -24,6 +24,7 @@ class Editor {
 
     lexer;
     local;
+    webSocket;
 
 
     menuBars;
@@ -168,12 +169,11 @@ class Editor {
                 const link = document.createElement("li");
                 link.append(document.createTextNode(stored.name));
 
-                link.addEventListener("click", async (event) => {
+                link.addEventListener("dblclick", async (event) => {
                     event.preventDefault();
 
                     console.log(stored.fileHandle.queryPermission({ mode: "readwrite" }));
                     const perm = await stored.fileHandle.requestPermission({ mode: "readwrite" });
-
 
                     if (perm === "granted") {
                         this.openDir = stored.fileHandle;
@@ -190,13 +190,58 @@ class Editor {
             nothing.append(links);
         });
 
-        coop.addEventListener("click", (event) => {
-            common();
+        coop.addEventListener("click", async (event) => {
+
+            const coops = await this.handleCoopFolder();
+            const links = document.createElement("ul");
+            console.log(coops);
+
+            coops.forEach((text) => {
+                const link = document.createElement("li");
+                link.innerText = text;
+
+                link.addEventListener("dblclick", async (event) => {
+
+                    let formData = new FormData();
+
+                    formData.append("workspace", text);
+                    console.log(text);
+                    
+
+                    const response = await fetch('/workspaces/content', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+
+                    if (response.ok) {
+
+                        this.local = false;
+
+                        this.remoteName = text;
+
+                        this.openDir = await response.json();
+
+                        common();
+                        this.redraw();
+
+                    } else {
+                        console.error(response.statusText);
+                    }
+
+
+
+
+
+                });
+
+                links.append(link);
+            })
+            nothing.append(links);
+
 
 
             // request workspaces to choose from
-
-
         });
 
 
@@ -383,7 +428,13 @@ class Editor {
 
 
 
+    loadRemoteContent = (path) => {
 
+        let res = JSON.stringify({request:path.path, workspace:this.remoteName});
+        this.webSocket.send(req);
+        
+
+    }
 
 
 
@@ -820,7 +871,15 @@ class Editor {
 
         let newFrag = document.createDocumentFragment();
 
-        newFrag.append(await this.drawDir(this.openDir, 0));
+        console.log(this.openDir);
+
+        if (this.local) {
+            newFrag.append(await this.drawDir(this.openDir, 0));
+        } else {
+            newFrag.append(this.drawDirRemote(this.openDir.root));
+        }
+
+
 
 
         this.files.innerHTML = "";
@@ -830,6 +889,165 @@ class Editor {
 
     }
 
+
+    drawDirRemote = (path) => {
+
+        if (path == this.openDir.root) {
+            var nameTag = this.remoteName;
+        } else {
+            var nameTag = [...path.path].pop();
+        }
+
+        console.log(path);
+        
+
+
+        console.log(`Directory: ${nameTag}`);
+        //console.log(directoryHandle);
+        const nameSpan = document.createElement("div");
+        const name = document.createTextNode(nameTag);
+        const div = document.createElement("div");
+
+        nameSpan.append(name);
+        nameSpan.classList.add("dir-name");
+
+
+        div.append(nameSpan);
+        div.classList.add("dir");
+        div.style.padding = "0";
+        div.style.paddingLeft = `0.5em`
+        div.setAttribute("opened", "false");
+
+
+
+        let children = this.openDir.files.filter((el) => {
+
+            
+
+            if (el.path.length - 1 == path.path.length) {
+
+                console.log(el, path);
+                console.log(path.path.length);
+
+                for (let i = 0; i < path.path.length; i++) {
+
+                    if (el.path[i] != path.path[i]) {
+                        return false;
+                    }
+
+                }
+                return true;
+            }
+
+            return false;
+
+        });
+
+        console.log(children);
+
+        nameSpan.addEventListener("dblclick", function (event) {
+            event.preventDefault();
+
+        })
+
+
+        nameSpan.addEventListener("click", async (event) => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+
+
+            if (div.getAttribute("opened") === "false") {
+                div.setAttribute("opened", "true");
+
+
+                for (let i = 0; i < children.length; i++) {
+
+                    let child = children[i];
+
+                    if (child.kind == "directory") {
+
+                        div.appendChild(this.drawDirRemote(child));
+
+                    } else {
+
+                        div.appendChild(this.drawFileRemote(child));
+                    }
+
+
+                }
+
+
+
+
+
+
+
+            } else if (div.getAttribute("opened") === "true") {
+                div.setAttribute("opened", "false");
+
+                div.innerHTML = "";
+                div.appendChild(nameSpan);
+
+
+
+            }
+
+
+
+
+        });
+
+
+        return div;
+
+
+
+
+
+
+    }
+
+    drawFileRemote = (path) => {
+
+
+        const nameTag = [...path.path].pop()
+
+        console.log(`File: ${path.path.join("/")}`);
+        const name = document.createTextNode(nameTag);
+        const div = document.createElement("div");
+
+        div.classList.add("file");
+        div.append(name);
+        div.style.margin = "0";
+        div.style.marginLeft = `0.5em`;
+
+        div.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log(`${nameTag} was clicked`);
+        })
+
+        div.addEventListener("dblclick", async (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+
+            console.log(this);
+
+            //const path = await this.openDir.resolve(fileHandle);
+
+            console.log(path);
+
+            this.pathDisplay.innerText = path.path;
+
+
+            this.loadContent(path);
+        })
+        return div;
+    }
 
 
     drawDir = async (directoryHandle, depth) => {
@@ -963,14 +1181,21 @@ class Editor {
 
     readDirectory = async () => {
 
+        if (!this.openDir) {
+            console.error("nothing to upload");
+            return;
+        }
+
+
         let formData = new FormData();
 
         let pathString = JSON.stringify(await this.openDir.resolve(this.openDir));
 
         formData.append("path", pathString);
         formData.append("root", "true");
+        formData.append("kind", this.openDir.kind);
 
-        const response = await fetch('/workspaces', {
+        const response = await fetch('/upload', {
             method: 'POST',
             body: formData
         });
@@ -981,23 +1206,29 @@ class Editor {
 
             for await (const [name, handle] of directoryHandle.entries()) {
 
+                let formData = new FormData();
+
+                let pathString = JSON.stringify(await this.openDir.resolve(handle));
+
+                formData.append("path", pathString);
+                formData.append("kind", handle.kind);
+
                 if (handle.kind === "directory") {
+
                     helper(handle);
                 } else {
 
-                    let formData = new FormData();
-
-                    let pathString = JSON.stringify(await this.openDir.resolve(handle));
-
-                    formData.append("path", pathString);
                     formData.append("file", await handle.getFile());
-
-                    const response = await fetch('/workspaces', {
-                        method: 'POST',
-                        body: formData
-                    });
+                }
 
 
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    console.error(`smth went wrong while uploading: ${pathString}`);
                 }
 
             }
@@ -1013,11 +1244,48 @@ class Editor {
 
         await this.readDirectory();
 
+        const ip = window.location.hostname;
+
+        this.webSocket = new WebSocket(`wss://${ip}`);
+
+        this.webSocket.onopen = () => {
+            console.log('WebSocket connection established');
+            this.webSocket.send("hello world");
+        };
+
+        this.webSocket.onmessage = (event) => {
+            console.log('Received message:', event.data);
+        };
+
+        this.webSocket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+
+        this.webSocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+
+
 
     }
 
 
-    handleCoopFolder = () => {
+    handleCoopFolder = async () => {
+
+        const response = await fetch('/workspaces', {
+            method: 'POST',
+            body: {}
+        });
+
+        if (response.ok) {
+
+            return await response.json();
+
+        } else {
+            console.log("smth went wrong while requesting coop folders");
+            return [];
+        }
 
     };
 
